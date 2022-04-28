@@ -1,0 +1,10 @@
+project: feast_demo
+provider: local
+online_store:
+  type: redis
+  connection_string: localhost:6379
+offline_store:
+  type: file
+flags:
+  alpha_features: true
+  on_demand_transforms: true
