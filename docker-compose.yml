@@ -13,6 +13,7 @@ services:
     container_name: broker
     ports:
       - "9092:9092"
+      - "29092:29092"
     depends_on:
       - zookeeper
     environment:
@@ -23,8 +24,15 @@ services:
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
-  
+
   redis:
     image: redis
     ports:
-     - "6379:6379"
+      - "6379:6379"
+
+  kafka_events:
+    build:
+      context: .
+      dockerfile: kafka_demo/Dockerfile
+    depends_on:
+      - broker

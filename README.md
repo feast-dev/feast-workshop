@@ -1,68 +1,41 @@
-# Feast Spark + Kafka workshop
+# Feast Spark + Kafka + Redis workshop
 
 ## Overview
 
-This workshop focuses on how to achieve a common architecture:
+This workshop aims to teach basic Feast concepts and walk you through focuses on how to achieve a common architecture:
 
 TODO: add architecture diagram
 
 - **Data sources**: Kafka + File source
 - **Online store**: Redis
-- **Use cases**: Predicting churn for drivers 
+- **Use case**: Predicting churn for drivers 
   - Batch scoring via offline store
   - Real time scoring via online store
 
-We will generate a model that will predict whether a driver will churn
+We will generate a model that will predict whether a driver will churn.
+
+## Pre-requisites
+This workshop assumes you have the following installed:
+- A local development environment that supports running Jupyter notebooks (e.g. VSCode with Jupyter plugin)
+- Python 3.7+
+- pip
+- Docker & Docker Compose (e.g. `brew install docker docker-compose`)
 
 ## Setup
 
 ### Docker + Kafka + Redis
-First, we need Docker and Docker Compose
+First, we install Feast with Redis support:
 ```
-brew install docker docker-compose
-```
-
-We then install the requirements:
-```
-pip install -r requirements.txt
+pip install "feast[redis]"
 ```
 
-We then spin up a local Kafka cluster that generates events into a topic.
+We then use Docker Compose to spin up a local Kafka cluster and automatically publish events to it. 
+- This leverages a script (in `kafka_demo/`) that creates a topic, reads from `feature_repo/data/driver_stats.parquet`, generates newer timestamps, and emits them to the topic.
 
 ```
 docker-compose up
 ```
 
-### Generate a topic
-If you run `python kafka_demo.py`, we now start generating streaming events from the parquet file continously (with sleeps to slow down event writes). We hard-code events to be a year fresher than what is available in the file.
-
-### Register a push source
-This push source reflects the transformed features you're generating in Spark Structured Streaming. Here, we have a push source that will materialize the transformed features from the batch file source as well as push transformed features into the online store from a Push API.
-
-```python
-driver_stats = FileSource(
-    path="data/driver_stats.parquet",
-    timestamp_field="event_timestamp",
-    created_timestamp_column="created",
-    description="A table describing the stats of a driver based on hourly logs",
-    owner="test@gmail.com",
-)
-
-driver_stats_push_source = PushSource(
-    name="driver_stats_push_source", batch_source=driver_stats,
-)
-
-driver_daily_features_view = FeatureView(
-    name="driver_daily_features",
-    entities=["driver"],
-    ttl=timedelta(seconds=8640000000),
-    schema=[Field(name="daily_miles_driven", dtype=Float32),],
-    online=True,
-    source=driver_stats_push_source,
-    tags={"production": "True"},
-    owner="test2@gmail.com",
-)
-```
 ### Setting up Feast
 
 Install Feast using pip
