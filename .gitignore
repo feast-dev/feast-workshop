@@ -1,2 +1,4 @@
 **/registry.db
+**/online.db
 .DS_Store
+**/__pycache__

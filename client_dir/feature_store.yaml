@@ -1,8 +1,8 @@
 project: feast_demo
+registry: ../feature_repo/data/registry.db
 provider: local
-# online_store:
-#   type: redis
-#   connection_string: localhost:6379
+online_store:
+  path: ../feature_repo/data/online.db
 offline_store:
   type: file
 flags:
