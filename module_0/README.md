@@ -62,11 +62,20 @@ See https://github.com/feast-dev/feast-demo/blob/main/.github/workflows/feast_pl
 
 One example is whether a PR may change features that are already depended on in production by another model (e.g. `FeatureService`). 
 
+An example output of `feast apply`:
+```bash
+Registered entity driver_id
+Registered feature view driver_hourly_stats
+Deploying infrastructure for driver_hourly_stats
+```
+
 ### Step 3 (optional): Access control for the registry
 We don't dive into this deeply, but you don't want to allow arbitrary users to clone the feature repository, change definitions and run `feast apply`. Thus, you should lock down your registry (e.g. with an S3 bucket policy) to only allow changes from your CI/CD user and perhaps some ML engineers.
 
 ### Step 4 (optional): Setup a Web UI endpoint
 Feast comes with an experimental Web UI. Users can already spin this up locally with `feast ui`, but you may want to have a Web UI that is universally available. Here, you'd likely deploy a service that runs `feast ui` on top of a `feature_store.yaml`, with some configuration on how frequently the UI should be refreshing its registry.
+
+![Feast UI](sample_web_ui.png)
 
 ### Other best practices
 Many Feast users use `tags` on objects extensively. Some examples of how this may be used:
