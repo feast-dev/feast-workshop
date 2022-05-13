@@ -2,3 +2,6 @@
 **/online.db
 .DS_Store
 **/__pycache__
+terraform.tfstate
+terraform.tfstate.backup
+.terraform*

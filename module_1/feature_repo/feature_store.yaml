@@ -1,8 +1,8 @@
-project: feast_demo
+project: feast_demo_local
 provider: local
-# online_store:
-#   type: redis
-#   connection_string: localhost:6379
+online_store:
+  type: redis
+  connection_string: localhost:6379
 offline_store:
   type: file
 flags:
