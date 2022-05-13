@@ -1,0 +1,5 @@
+project: feast_demo_odfv
+provider: local
+flags:
+  alpha_features: true
+  on_demand_transforms: true

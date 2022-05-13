@@ -4,6 +4,3 @@ registry: s3://feast-spark-workshop-test/registry.pb # TODO: Replace with your b
 online_store: null
 offline_store:
   type: file
-flags:
-  alpha_features: true
-  on_demand_transforms: true

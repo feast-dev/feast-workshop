@@ -1,9 +1,4 @@
-from feast import (
-    Field,
-    FileSource,
-    RequestSource,
-)
-from feast.types import Int64
+from feast import FileSource
 
 driver_stats = FileSource(
     name="driver_stats_source",
@@ -13,15 +8,4 @@ driver_stats = FileSource(
     created_timestamp_column="created",
     description="A table describing the stats of a driver based on hourly logs",
     owner="test2@gmail.com",
-)
-
-
-# Define a request data source which encodes features / information only
-# available at request time (e.g. part of the user initiated HTTP request)
-input_request = RequestSource(
-    name="vals_to_add",
-    schema=[
-        Field(name="val_to_add", dtype=Int64),
-        Field(name="val_to_add_2", dtype=Int64),
-    ],
 )

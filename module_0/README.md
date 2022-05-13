@@ -135,10 +135,10 @@ Feast right now requires timestamps in `get_historical_features`, so what you'll
 
 ```python
 # Get the latest feature values for unique entities
+entity_df = pd.DataFrame.from_dict({"driver_id": [1001, 1002, 1003, 1004, 1005],})
 entity_df["event_timestamp"] = pd.to_datetime('now')
 training_df = store.get_historical_features(
-    entity_df=entity_df,
-    features=store.get_feature_service("model_v1")
+    entity_df=entity_df, features=store.get_feature_service("model_v2"),
 ).to_df()
 
 # Make batch predictions

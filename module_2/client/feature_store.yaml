@@ -1,0 +1,9 @@
+project: feast_demo_odfv
+provider: local
+registry: ../feature_repo/data/registry.db # Normally would be a remote registry
+online_store:
+  type: sqlite
+  path: "../feature_repo/data/online.db"
+flags:
+  alpha_features: true
+  on_demand_transforms: true
