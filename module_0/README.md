@@ -1,4 +1,4 @@
-# Module 0: Setting up and using an initial Feast feature repo
+# Module 0: Setting up a feature repo, sharing features, batch predictions
 
 Welcome! Here we use a basic example to explain key concepts and user flows in Feast. 
 
@@ -38,31 +38,49 @@ flags:
 ```
 
 Some quick recap of what's happening here:
-- The `project` gives infrastructure isolation. Commonly, to start, users will start with one large project for multiple teams.
+- `project` gives infrastructure isolation. 
+  - Commonly, to start, users will start with one large project for multiple teams.
   - All Feast objects like `FeatureView`s have associated projects. Users can only request features from a single project.
-  - Online stores (when relevant) 
-- The `provider` options available out of the box set (`gcp`, `aws`, `local`) where the registry lives (S3 vs GCS vs local file) and defaults for offline / online stores if none are specified
-- The `registry` is the source of truth on registered Feast objects. Users + model servers will pull from this to get the latest registered features + metadata.  
+  - Online stores (if used) namespace by project names 
+- `provider` defines registry locations & sets defaults for offline / online stores options 
+  - For example, the `gcp` provider will enable registries in GCS and sets BigQuery + Datastore as the default offline / online stores. 
+  - Provider defaults can be easily overriden in `feature_store.yaml`
+- `registry` defines the specific path for the registry
+  - The Feast registry is the source of truth on registered Feast objects. 
+    - Users + model servers will pull from this to get the latest registered features + metadata.  
   - **Note**: technically, multiple projects can use the same registry, though Feast was not designed with this in mind. Discovery of adjacent features is possible in this flow, but not retrieval.
-- The `online_store` here you see is set to null. If you don't need to power real time models with fresh features, this is not needed. If you are batch scoring, for example, then the online store is optional.
-- The `offline_store` can only be one type. 
-  - Here, for instruction purposes, we use `file` sources. This will directly read from files (local or remote) and use Dask to execute point-in-time joins. We **do not** recommend this for production usage.
-  - Generally, we recommend users bias towards data warehouses as their offline store since they are very performant at generating training datasets. 
+- `online_store` here is set to null. 
+  - If you don't need to power real time models with fresh features, this is not needed. 
+  - If you are batch scoring, for example, then the online store is optional.
+- `offline_store` defines the offline compute that executes point in time joins
+  - Can only be one type (cannot mix Snowflake + file for example)
+  - Here, for instruction purposes, we use `file` sources. 
+    - This will directly read from files (local or remote) and use Dask to execute point-in-time joins. 
+    - We **do not** recommend this for production usage.
+  - We recommend users to use data warehouses as their offline store for performant training dataset generation. 
   - There is also a contrib plugin (`SparkOfflineStore`) which supports retrieving features with Spark.
-- The `flags` control a couple of features today. We're likely to deprecate this system soon, but today it still gates `OnDemandFeatureView` which is still under development.
+- `flags` are the legacy way of controlling alpha features 
+  - We're likely to deprecate this system soon, but today it still gates `OnDemandFeatureView` which is still under development.
   
-With the `feature_store.yaml` setup, you can now run `feast apply` to populate the registry. At this point, you can move to...
+With the `feature_store.yaml` setup, you can now run `feast apply` to create & populate the registry. 
 
 ### Step 2: Adding the feature repo to version control
-TODO
 
-Here we also setup CI/CD. You'll want to have a workflow that on PR merge, runs `feast apply`.
+<img src="ci_cd_flow.png" width=600 style="padding: 10px 0">
 
-See https://github.com/feast-dev/feast-demo/blob/main/.github/workflows/feast_plan.yml as an example of a workflow that automatically runs `feast plan` on new incoming PRs, which alerts you on what changes will occur. This is useful for helping PR reviewers understand the effects of a change.
+We setup CI/CD to automatically manage the registry. You'll want e.g. a GitHub workflow that
+- on pull request, runs `feast plan` 
+- on PR merge, runs `feast apply`.
 
-One example is whether a PR may change features that are already depended on in production by another model (e.g. `FeatureService`). 
+#### **feast plan**
+See [feast_plan.yml](https://github.com/feast-dev/feast-demo/blob/main/.github/workflows/feast_plan.yml) as an example of a workflow that automatically runs `feast plan` on new incoming PRs, which alerts you on what changes will occur. 
+- This is useful for helping PR reviewers understand the effects of a change.
+- One example is whether a PR may change features that are already depended on in production by another model (e.g. `FeatureService`). 
 
-An example output of `feast apply`:
+#### **feast apply**
+This will parse the feature, data source, and feature service definitions and publish them to the registry. It may also setup some tables in the online store to materialize batch features to. 
+
+Sample output of `feast apply`:
 ```bash
 Registered entity driver_id
 Registered feature view driver_hourly_stats
@@ -110,16 +128,26 @@ Two ways of working
 Data scientists can also investigate other models and their dependent features / data sources / on demand transformations through the repository or through the Web UI (by running `feast ui`)
 
 ## 2c. ML engineers
-TODO
 
-Discuss the `client/` folder which only needs the `feature_store.yaml` to fetch features and schedule periodic training + model inference jobs
+Data scientists or ML engineers can use the defined `FeatureService` (corresponding to model versions) and schedule regular jobs that generate batch predictions (or regularly retrain).  
+
+Feast right now requires timestamps in `get_historical_features`, so what you'll need to do is append an event timestamp of `now()`. e.g.
+
+```python
+# Get the latest feature values for unique entities
+entity_df["event_timestamp"] = pd.to_datetime('now')
+training_df = store.get_historical_features(
+    entity_df=entity_df,
+    features=store.get_feature_service("model_v1")
+).to_df()
+
+# Make batch predictions
+predictions = model.predict(training_df)
+```
 
 # Conclusion
 As a result:
-- You have file sources in S3
-- You have data scientists who are able to author + reuse features based on a centrally managed registry. 
-- You have CI/CD You have a remote server that needs to call Feast to retrieve features, including executing on demand transformations to pass for model inference.
-- As a result of having multiple services needing central access to a registry, you also have your registry stored in S3.
-- You have multiple data scientists needing access to features
-
-TODO
+- You have file sources (possibly remote) and a remote registry (e.g. in S3)
+- Data scientists are able to author + reuse features based on a centrally managed registry. 
+- ML engineers are able to use these same features with a reference to the registry to regularly generating predictions on the latest timestamp.
+- You have CI/CD setup to automatically update the registry + online store infrastructure when changes are merged into the version controlled feature repo. 
