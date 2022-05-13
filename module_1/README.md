@@ -71,4 +71,4 @@ driver_daily_features from 1748-07-13 16:38:03-04:56:02 to 2022-04-28 12:38:01-0
 
 ## Continue with the workshop
 
-Now run the Jupyter notebook ([feature_repo/workshop.ipynb](feature_repo/workshop.ipynb))
+Now run the Jupyter notebook ([feature_repo/workshop.ipynb](feature_repo/module_1.ipynb))
