@@ -52,18 +52,19 @@ A quick explanation of what's happening here:
 - Generally, custom offline + online stores and providers are supported and can plug in. 
   - e.g. see [adding a new offline store](https://docs.feast.dev/how-to-guides/adding-a-new-offline-store), [adding a new online store](https://docs.feast.dev/how-to-guides/adding-support-for-a-new-online-store)
 - **Project**
-  - users can only request features from a single project
+  - Users can only request features from a single project
 - **Provider**
-  - defaults can be easily overriden in `feature_store.yaml`. 
+  - Defaults can be easily overriden in `feature_store.yaml`. 
     - For example, one can use the `aws` provider and specify Snowflake as the offline store.
 - **Offline Store** 
-  - we recommend users use data warehouses or Spark as their offline store for performant training dataset generation. 
+  - We recommend users use data warehouses or Spark as their offline store for performant training dataset generation. 
     - Here, we use file sources for instructional purposes. This will directly read from files (local or remote) and use Dask to execute point-in-time joins. 
   - A project can only support one type of offline store (cannot mix Snowflake + file for example)
+  - Each offline store has its own configurations which map to YAML. (e.g. see [BigQueryOfflineStoreConfig](https://rtd.feast.dev/en/master/index.html#feast.infra.offline_stores.bigquery.BigQueryOfflineStoreConfig)):
 - **Online Store**
   - If you don't need to power real time models with fresh features, this is not needed. 
   - If you are precomputing predictions in batch ("batch scoring"), then the online store is optional. You should be using the offline store and running `feature_store.get_historical_features`
-  
+  - Each online store has its own configurations which map to YAML. (e.g. [RedisOnlineStoreConfig](https://rtd.feast.dev/en/master/feast.infra.online_stores.html#feast.infra.online_stores.redis.RedisOnlineStoreConfig))
 With the `feature_store.yaml` setup, you can now run `feast apply` to create & populate the registry. 
 
 ### Step 2: Adding the feature repo to version control
@@ -152,6 +153,34 @@ training_df = store.get_historical_features(
 
 # Make batch predictions
 predictions = model.predict(training_df)
+```
+
+### A note on scalability
+You may note that the above example uses a `to_df()` method to load the training dataset into memory and may be wondering how this scales if you have very large datasets.
+
+`get_historical_features` actually returns a `RetrievalJob` object that lazily executes the point-in-time join. The `RetrievalJob` class is extended by each offline store to allow flushing results to e.g. the data warehouse or data lakes. 
+
+Let's look at an example with BigQuery as the offline store. 
+```yaml
+project: feast_demo_gcp
+provider: gcp
+registry: gs://[YOUR BUCKET]/registry.pb
+offline_store:
+  type: bigquery
+  location: EU
+flags:
+  alpha_features: true
+  on_demand_transforms: true
+```
+
+Retrieving the data with `get_historical_features` gives a `BigQueryRetrievalJob` object ([reference](https://rtd.feast.dev/en/master/index.html#feast.infra.offline_stores.bigquery.BigQueryRetrievalJob)) which exposes a `to_bigquery()` method. Thus, you can do:
+
+```python
+path = training_df = store.get_historical_features(
+    entity_df=entity_df, features=store.get_feature_service("model_v2"),
+).to_bigquery()
+
+# Continue with distributed training or batch predictions from the BigQuery dataset.
 ```
 
 # Conclusion
