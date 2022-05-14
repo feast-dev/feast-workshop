@@ -1,12 +1,10 @@
 # Module 1: Serving fresh online features with Feast, Kafka, Redis
 
-In module 1, we focus on building some test features and go through common flows in Feast
+In module 1, we focus on building features for online serving, and keeping them fresh with a combination of batch feature materialization and stream feature ingestion. 
 
 - **Data sources**: Kafka + File source
 - **Online store**: Redis
-- **Use case**: Predicting churn for drivers 
-  - Batch scoring via offline store
-  - Real time scoring via online store
+- **Use case**: Predicting churn for drivers in real time.
 
 ## Setup
 
