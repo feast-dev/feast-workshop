@@ -1,4 +1,4 @@
-# Learning Feast
+# Workshop: Learning Feast by Example
 
 ## Overview
 
