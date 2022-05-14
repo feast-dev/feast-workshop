@@ -17,7 +17,7 @@ To support this, you'll need:
 | Transformations | Feast supports last mile transformations with `OnDemandFeatureView`s that can be re-used                                                                                                         |
 
 # 2. User flows
-There are three user groups here worth considering. The ML platform team, the data scientists, and the ML engineers scheduling models in batch. We visit the first two of these in 
+There are three user groups here worth considering. The ML platform team, the data scientists, and the ML engineers scheduling models in batch. 
 
 ## 2a. ML Platform Team
 The team here sets up the centralized Feast feature repository in GitHub. This is what's seen in `feature_repo_aws/`.
