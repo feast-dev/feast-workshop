@@ -120,24 +120,7 @@ Additionally, users will often want to have a dev/staging environment that's sep
     ├── driver_repo.py
     └── feature_store.yaml
 ```
-
-## 2b. Data scientists
-Data scientists will be using or authoring features in Feast. 
-
-There are two ways they can use Feast:
-- Use Feast primarily as a way of pulling production ready features. 
-  - See the `client/` folder for an example of how users can pull features by only having a `feature_store.yaml` 
-  - This is **not recommended** since data scientists cannot register feature services to indicate they depend on certain features in production. 
-- **[Recommended]** Have a local copy of the feature repository (e.g. `git clone`) and author / iterate / re-use features. 
-  - Data scientist can:
-    1. iterate on features locally
-    2. apply features to their own dev project with a local registry & experiment
-    3. build feature services in preparation for production
-    4. submit PRs to include features that should be used in production (including A/B experiments, or model training iterations)
-
-Data scientists can also investigate other models and their dependent features / data sources / on demand transformations through the repository or through the Web UI (by running `feast ui`)
-
-## 2c. ML engineers
+## 2b. ML engineers
 
 Data scientists or ML engineers can use the defined `FeatureService` (corresponding to model versions) and schedule regular jobs that generate batch predictions (or regularly retrain).  
 
@@ -182,6 +165,22 @@ path = store.get_historical_features(
 
 # Continue with distributed training or batch predictions from the BigQuery dataset.
 ```
+
+## 2c. Data scientists
+Data scientists will be using or authoring features in Feast. They can similarly handle larger datasets with methods like `RetrievalJob#to_bigquery()` as described above.
+
+There are two ways they can use Feast:
+- Use Feast primarily as a way of pulling production ready features. 
+  - See the `client/` folder for an example of how users can pull features by only having a `feature_store.yaml` 
+  - This is **not recommended** since data scientists cannot register feature services to indicate they depend on certain features in production. 
+- **[Recommended]** Have a local copy of the feature repository (e.g. `git clone`) and author / iterate / re-use features. 
+  - Data scientist can:
+    1. iterate on features locally
+    2. apply features to their own dev project with a local registry & experiment
+    3. build feature services in preparation for production
+    4. submit PRs to include features that should be used in production (including A/B experiments, or model training iterations)
+
+Data scientists can also investigate other models and their dependent features / data sources / on demand transformations through the repository or through the Web UI (by running `feast ui`)
 
 # Conclusion
 As a result:
