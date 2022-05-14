@@ -16,12 +16,12 @@ This workshop assumes you have the following installed:
 
 These are meant mostly to be done in order, with examples building on previous concepts.
 
-| Description                                                     | Module                         |
-| :-------------------------------------------------------------- | ------------------------------ |
-| Setting up Feast projects & CI/CD + powering batch predictions  | [Module 0](module_0/README.md) |
-| Online feature retrieval with Kafka, Spark, Redis               | [Module 1](module_1/README.md) |
-| On demand feature views                                         | [Module 2](module_2/README.md) |
-| Versioning features / models in Feast                           | TBD                            |
-| Data quality monitoring in Feast                                | TBD                            |
-| Feature server deployment (embed, as a service, via AWS Lambda) | TBD                            |
+| Description                                                    | Module                         |
+| :------------------------------------------------------------- | ------------------------------ |
+| Setting up Feast projects & CI/CD + powering batch predictions | [Module 0](module_0/README.md) |
+| Online feature retrieval with Kafka, Spark, Redis              | [Module 1](module_1/README.md) |
+| On demand feature views                                        | [Module 2](module_2/README.md) |
+| Versioning features / models in Feast                          | TBD                            |
+| Data quality monitoring in Feast                               | TBD                            |
+| Feature server deployment (embed, as a service, AWS Lambda)    | TBD                            |
 
