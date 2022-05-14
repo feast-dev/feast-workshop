@@ -176,7 +176,7 @@ flags:
 Retrieving the data with `get_historical_features` gives a `BigQueryRetrievalJob` object ([reference](https://rtd.feast.dev/en/master/index.html#feast.infra.offline_stores.bigquery.BigQueryRetrievalJob)) which exposes a `to_bigquery()` method. Thus, you can do:
 
 ```python
-path = training_df = store.get_historical_features(
+path = store.get_historical_features(
     entity_df=entity_df, features=store.get_feature_service("model_v2"),
 ).to_bigquery()
 
