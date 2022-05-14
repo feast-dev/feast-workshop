@@ -42,13 +42,13 @@ A quick explanation of what's happening here:
 | Key             | What it does                                                                         | Example                                                                                                  |
 | :-------------- | :----------------------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------- |
 | `project`       | Gives infrastructure isolation via namespacing (e.g. online stores + Feast objects). | any unique name (e.g. `feast_demo_aws`)                                                                  |
-| `provider`      | Defines registry locations & sets defaults for offline / online stores options       | `gcp` enables registries in GCS and sets BigQuery + Datastore as the default offline / online stores.    |
+| `provider`      | Defines registry location & sets defaults for offline / online stores                | `gcp` enables registries in GCS and sets BigQuery + Datastore as the default offline / online stores.    |
 | `registry`      | Defines the specific path for the registry (local, gcs, s3, etc)                     | `s3://[YOUR BUCKET]/registry.pb`                                                                         |
-| `online_store`  | Specifies configuration for the online store (or null if online store isn't needed)  | `redis`, `dynamodb`, `datastore`, `postgres`, `hbase` (each have their own extra config flags)           |
+| `online_store`  | Specifies configuration for the online store (if needed)                             | `null`, `redis`, `dynamodb`, `datastore`, `postgres`, `hbase` (each have their own extra config flags)   |
 | `offline_store` | Specifies configuration for the offline store, which executes point in time joins    | `bigquery`, `snowflake.offline`,  `redshift`, `spark`, `trino`  (each have their own extra config flags) |
 | `flags`         | (legacy) Soon to be deprecated way to enable experimental functionality.             |                                                                                                          |
 
-Some further notes and gotchas:
+#### **Some further notes and gotchas**
 - Generally, custom offline + online stores and providers are supported and can plug in. 
   - e.g. see [adding a new offline store](https://docs.feast.dev/how-to-guides/adding-a-new-offline-store), [adding a new online store](https://docs.feast.dev/how-to-guides/adding-support-for-a-new-online-store)
 - **Project**
