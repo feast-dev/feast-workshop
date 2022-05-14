@@ -39,14 +39,14 @@ flags:
 
 A quick explanation of what's happening here:
 
-| Key             | What it does                                                                         | Example                                                                                                  |
-| :-------------- | :----------------------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------- |
-| `project`       | Gives infrastructure isolation via namespacing (e.g. online stores + Feast objects). | any unique name (e.g. `feast_demo_aws`)                                                                  |
-| `provider`      | Defines registry location & sets defaults for offline / online stores                | `gcp` enables registries in GCS and sets BigQuery + Datastore as the default offline / online stores.    |
-| `registry`      | Defines the specific path for the registry (local, gcs, s3, etc)                     | `s3://[YOUR BUCKET]/registry.pb`                                                                         |
-| `online_store`  | Specifies configuration for the online store (if needed)                             | `null`, `redis`, `dynamodb`, `datastore`, `postgres`, `hbase` (each have their own extra config flags)   |
-| `offline_store` | Specifies configuration for the offline store, which executes point in time joins    | `bigquery`, `snowflake.offline`,  `redshift`, `spark`, `trino`  (each have their own extra config flags) |
-| `flags`         | (legacy) Soon to be deprecated way to enable experimental functionality.             |                                                                                                          |
+| Key             | What it does                                                                         | Example                                                                                               |
+| :-------------- | :----------------------------------------------------------------------------------- | :---------------------------------------------------------------------------------------------------- |
+| `project`       | Gives infrastructure isolation via namespacing (e.g. online stores + Feast objects). | any unique name (e.g. `feast_demo_aws`)                                                               |
+| `provider`      | Defines registry location & sets defaults for offline / online stores                | `gcp` enables registries in GCS and sets BigQuery + Datastore as the default offline / online stores. |
+| `registry`      | Defines the specific path for the registry (local, gcs, s3, etc)                     | `s3://[YOUR BUCKET]/registry.pb`                                                                      |
+| `online_store`  | Configures online store (if needed)                                                  | `null`, `redis`, `dynamodb`, `datastore`, `postgres`, `hbase` (each have their own extra configs)     |
+| `offline_store` | Configures offline store, which executes point in time joins                         | `bigquery`, `snowflake.offline`,  `redshift`, `spark`, `trino`  (each have their own extra configs)   |
+| `flags`         | (legacy) Soon to be deprecated way to enable experimental functionality.             |                                                                                                       |
 
 #### **Some further notes and gotchas**
 - Generally, custom offline + online stores and providers are supported and can plug in. 
