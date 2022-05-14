@@ -8,13 +8,13 @@ We focus on a specific example (that does not include online features + models):
 
 # 1. Mapping to Feast concepts
 To support this, you'll need:
-| Concept         | Requirements                                                                                          |
-| :-------------- | :---------------------------------------------------------------------------------------------------- |
-| Data sources    | `FileSource` (with S3 paths and endpoint overrides) and `FeatureView`s registered with `feast apply`  |
-| Feature views   | Feature views tied to data sources that are shared by data scientists, registered with `feast apply`  |
-| Provider        | In `feature_store.yaml`, specifying the `aws` provider to ensure your registry can be stored in S3    |
-| Registry        | In `feature_store.yaml`, specifying a path (within an existing S3 bucket) the registry is written to. |
-| Transformations | Feast supports last mile transformations with `OnDemandFeatureView` that can be re-used               |
+| Concept         | Requirements                                                                                                                                                                                     |
+| :-------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Data sources    | `FileSource` (with S3 paths and endpoint overrides) and `FeatureView`s registered with `feast apply`                                                                                             |
+| Feature views   | Feature views tied to data sources that are shared by data scientists, registered with `feast apply`                                                                                             |
+| Provider        | In `feature_store.yaml`, specifying the `aws` provider to ensure your registry can be stored in S3                                                                                               |
+| Registry        | In `feature_store.yaml`, specifying a path (within an existing S3 bucket) the registry is written to. Users + model servers will pull from this to get the latest registered features + metadata |
+| Transformations | Feast supports last mile transformations with `OnDemandFeatureView`s that can be re-used                                                                                                         |
 
 # 2. User flows
 There are three user groups here worth considering. The ML platform team, the data scientists, and the ML engineers scheduling models in batch. We visit the first two of these in 
@@ -37,30 +37,32 @@ flags:
   on_demand_transforms: true
 ```
 
-Some quick recap of what's happening here:
-- `project` gives infrastructure isolation. 
-  - Commonly, to start, users will start with one large project for multiple teams.
-  - All Feast objects like `FeatureView`s have associated projects. Users can only request features from a single project.
-  - Online stores (if used) namespace by project names 
-- `provider` defines registry locations & sets defaults for offline / online stores options 
-  - For example, the `gcp` provider will enable registries in GCS and sets BigQuery + Datastore as the default offline / online stores. 
-  - Provider defaults can be easily overriden in `feature_store.yaml`
-- `registry` defines the specific path for the registry
-  - The Feast registry is the source of truth on registered Feast objects. 
-    - Users + model servers will pull from this to get the latest registered features + metadata.  
-  - **Note**: technically, multiple projects can use the same registry, though Feast was not designed with this in mind. Discovery of adjacent features is possible in this flow, but not retrieval.
-- `online_store` here is set to null. 
+A quick explanation of what's happening here:
+
+| Key             | What it does                                                                         | Example                                                                                                  |
+| :-------------- | :----------------------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------- |
+| `project`       | Gives infrastructure isolation via namespacing (e.g. online stores + Feast objects). | any unique name (e.g. `feast_demo_aws`)                                                                  |
+| `provider`      | Defines registry locations & sets defaults for offline / online stores options       | `gcp` enables registries in GCS and sets BigQuery + Datastore as the default offline / online stores.    |
+| `registry`      | Defines the specific path for the registry (local, gcs, s3, etc)                     | `s3://[YOUR BUCKET]/registry.pb`                                                                         |
+| `online_store`  | Specifies configuration for the online store (or null if online store isn't needed)  | `redis`, `dynamodb`, `datastore`, `postgres`, `hbase` (each have their own extra config flags)           |
+| `offline_store` | Specifies configuration for the offline store, which executes point in time joins    | `bigquery`, `snowflake.offline`,  `redshift`, `spark`, `trino`  (each have their own extra config flags) |
+| `flags`         | (legacy) Soon to be deprecated way to enable experimental functionality.             |                                                                                                          |
+
+Some further notes and gotchas:
+- Generally, custom offline + online stores and providers are supported and can plug in. 
+  - e.g. see [adding a new offline store](https://docs.feast.dev/how-to-guides/adding-a-new-offline-store), [adding a new online store](https://docs.feast.dev/how-to-guides/adding-support-for-a-new-online-store)
+- **Project**
+  - users can only request features from a single project
+- **Provider**
+  - defaults can be easily overriden in `feature_store.yaml`. 
+    - For example, one can use the `aws` provider and specify Snowflake as the offline store.
+- **Offline Store** 
+  - we recommend users use data warehouses or Spark as their offline store for performant training dataset generation. 
+    - Here, we use file sources for instructional purposes. This will directly read from files (local or remote) and use Dask to execute point-in-time joins. 
+  - A project can only support one type of offline store (cannot mix Snowflake + file for example)
+- **Online Store**
   - If you don't need to power real time models with fresh features, this is not needed. 
-  - If you are batch scoring, for example, then the online store is optional.
-- `offline_store` defines the offline compute that executes point in time joins
-  - Can only be one type (cannot mix Snowflake + file for example)
-  - Here, for instruction purposes, we use `file` sources. 
-    - This will directly read from files (local or remote) and use Dask to execute point-in-time joins. 
-    - We **do not** recommend this for production usage.
-  - We recommend users to use data warehouses as their offline store for performant training dataset generation. 
-  - There is also a contrib plugin (`SparkOfflineStore`) which supports retrieving features with Spark.
-- `flags` are the legacy way of controlling alpha features 
-  - We're likely to deprecate this system soon, but today it still gates `OnDemandFeatureView` which is still under development.
+  - If you are precomputing predictions in batch ("batch scoring"), then the online store is optional. You should be using the offline store and running `feature_store.get_historical_features`
   
 With the `feature_store.yaml` setup, you can now run `feast apply` to create & populate the registry. 
 
@@ -119,11 +121,18 @@ Additionally, users will often want to have a dev/staging environment that's sep
 ```
 
 ## 2b. Data scientists
-TODO
+Data scientists will be using or authoring features in Feast. 
 
-Two ways of working
-- Use the `client/` folder approach of not authoring features and primarily re-using features already used in production.
-- Have a local copy of the feature repository (e.g. `git clone`). Then the data scientist can iterate on features locally, apply features to their own dev project with a local registry, and then submit PRs to include features that should be used in production (including A/B experiments, or model training iterations)
+There are two ways they can use Feast:
+- Use Feast primarily as a way of pulling production ready features. 
+  - See the `client/` folder for an example of how users can pull features by only having a `feature_store.yaml` 
+  - This is **not recommended** since data scientists cannot register feature services to indicate they depend on certain features in production. 
+- **[Recommended]** Have a local copy of the feature repository (e.g. `git clone`) and author / iterate / re-use features. 
+  - Data scientist can:
+    1. iterate on features locally
+    2. apply features to their own dev project with a local registry & experiment
+    3. build feature services in preparation for production
+    4. submit PRs to include features that should be used in production (including A/B experiments, or model training iterations)
 
 Data scientists can also investigate other models and their dependent features / data sources / on demand transformations through the repository or through the Web UI (by running `feast ui`)
 
