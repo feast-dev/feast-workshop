@@ -1,8 +1,8 @@
-# Workshop: Learning Feast by Example
+# Workshop: Learning Feast
 
 ## Overview
 
-This workshop aims to teach basic Feast concepts and walk you through how to achieve common architectures.
+This workshop aims to teach basic Feast concepts & best practices by example. We walk through how to address common use cases and architectures.
 
 ## Pre-requisites
 This workshop assumes you have the following installed:
@@ -11,8 +11,10 @@ This workshop assumes you have the following installed:
 - pip
 - Docker & Docker Compose (e.g. `brew install docker docker-compose`)
 
-## This workshop is composed of several modules
+## Modules
 *See also: [Feast quickstart](https://docs.feast.dev/getting-started/quickstart)*
+
+These are meant mostly to be done in order, with examples building on previous concepts.
 
 | Description                                                            | Module                         |
 | :--------------------------------------------------------------------- | ------------------------------ |
