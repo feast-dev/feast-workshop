@@ -7,7 +7,7 @@ We focus on a specific example (that does not include online features + models):
 - **Stack**: you have data in a combination of data warehouses (to be explored in a future module) and data lakes (e.g. S3)
 
 # Mapping to Feast concepts
-To support this, you'll need:
+Let's quickly review some Feast concepts needed to build this use case. You'll need:
 | Concept         | Requirements                                                                                                                                                                                     |
 | :-------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Data sources    | `FileSource` (with S3 paths and endpoint overrides) and `FeatureView`s registered with `feast apply`                                                                                             |
@@ -15,6 +15,14 @@ To support this, you'll need:
 | Provider        | In `feature_store.yaml`, specifying the `aws` provider to ensure your registry can be stored in S3                                                                                               |
 | Registry        | In `feature_store.yaml`, specifying a path (within an existing S3 bucket) the registry is written to. Users + model servers will pull from this to get the latest registered features + metadata |
 | Transformations | Feast supports last mile transformations with `OnDemandFeatureView`s that can be re-used                                                                                                         |
+
+# Installing Feast
+Before we get started, first install Feast with AWS dependencies. Due to a bug in Feast 0.21, we'll also need s3fs for this tutorial to directly fetch from an S3 source:
+
+```bash
+pip install "feast[aws]"
+pip install s3fs
+```
 
 # User flows
 There are three user groups here worth considering. The ML platform team, the data scientists, and the ML engineers scheduling models in batch. 
@@ -28,7 +36,7 @@ This assumes you have an AWS account & Terraform setup. If you don't:
 - Install [Terraform](https://learn.hashicorp.com/tutorials/terraform/install-cli#install-terraform)
 
 
-We've made a simple Terraform project to help with S3 bucket creation:
+We've made a simple Terraform project to help with S3 bucket creation (and uploading the test data we need):
 ```bash
 cd infra/
 terraform init
@@ -55,6 +63,7 @@ project_name = "danny"
 ### Step 1: Setup the feature repo
 The first thing a platform team needs to do is setup the `feature_store.yaml` within a version controlled repo like GitHub. We've setup a sample feature repository in `feature_repo_aws/`
 
+#### Step 1a: Use your configured S3 bucket
 There are two files in `feature_repo_aws` you need to change to point to your S3 bucket:
 
 **data_sources.py**
@@ -85,18 +94,16 @@ flags:
 
 A quick explanation of what's happening in this `feature_store.yaml`:
 
-| Key             | What it does                                                                         | Example                                                                                               |
-| :-------------- | :----------------------------------------------------------------------------------- | :---------------------------------------------------------------------------------------------------- |
-| `project`       | Gives infrastructure isolation via namespacing (e.g. online stores + Feast objects). | any unique name (e.g. `feast_demo_aws`)                                                               |
-| `provider`      | Defines registry location & sets defaults for offline / online stores                | `gcp` enables registries in GCS and sets BigQuery + Datastore as the default offline / online stores. |
-| `registry`      | Defines the specific path for the registry (local, gcs, s3, etc)                     | `s3://[YOUR BUCKET]/registry.pb`                                                                      |
-| `online_store`  | Configures online store (if needed)                                                  | `null`, `redis`, `dynamodb`, `datastore`, `postgres`, `hbase` (each have their own extra configs)     |
-| `offline_store` | Configures offline store, which executes point in time joins                         | `bigquery`, `snowflake.offline`,  `redshift`, `spark`, `trino`  (each have their own extra configs)   |
-| `flags`         | (legacy) Soon to be deprecated way to enable experimental functionality.             |                                                                                                       |
+| Key             | What it does                                                                         | Example                                                                                                  |
+| :-------------- | :----------------------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------- |
+| `project`       | Gives infrastructure isolation via namespacing (e.g. online stores + Feast objects). | any unique name within your organization (e.g. `feast_demo_aws`)                                         |
+| `provider`      | Defines registry location & sets defaults for offline / online stores                | `gcp` enables a GCS-based registry and sets BigQuery + Datastore as the default offline / online stores. |
+| `registry`      | Defines the specific path for the registry (local, gcs, s3, etc)                     | `s3://[YOUR BUCKET]/registry.pb`                                                                         |
+| `online_store`  | Configures online store (if needed for supporting real-time models)                  | `null`, `redis`, `dynamodb`, `datastore`, `postgres`, `hbase` (each have their own extra configs)        |
+| `offline_store` | Configures offline store, which executes point in time joins                         | `bigquery`, `snowflake.offline`,  `redshift`, `spark`, `trino`  (each have their own extra configs)      |
+| `flags`         | (legacy) Soon to be deprecated way to enable experimental functionality.             |                                                                                                          |
 
 #### **Some further notes and gotchas**
-- Generally, custom offline + online stores and providers are supported and can plug in. 
-  - e.g. see [adding a new offline store](https://docs.feast.dev/how-to-guides/adding-a-new-offline-store), [adding a new online store](https://docs.feast.dev/how-to-guides/adding-support-for-a-new-online-store)
 - **Project**
   - Users can only request features from a single project
 - **Provider**
@@ -117,16 +124,60 @@ A quick explanation of what's happening in this `feature_store.yaml`:
           database: SNOWFLAKE_DATABASE
 
       ```
-- **Offline Store** 
+- **Offline store** 
   - We recommend users use data warehouses or Spark as their offline store for performant training dataset generation. 
     - In this workshop, we use file sources for instructional purposes. This will directly read from files (local or remote) and use Dask to execute point-in-time joins. 
   - A project can only support one type of offline store (cannot mix Snowflake + file for example)
   - Each offline store has its own configurations which map to YAML. (e.g. see [BigQueryOfflineStoreConfig](https://rtd.feast.dev/en/master/index.html#feast.infra.offline_stores.bigquery.BigQueryOfflineStoreConfig)):
-- **Online Store**
+- **Online store**
   - You only need this if you're powering real time models (e.g. inferring in response to user requests)
     - If you are precomputing predictions in batch (aka batch scoring), then the online store is optional. You should be using the offline store and running `feature_store.get_historical_features`. We touch on this later in this module.
   - Each online store has its own configurations which map to YAML. (e.g. [RedisOnlineStoreConfig](https://rtd.feast.dev/en/master/feast.infra.online_stores.html#feast.infra.online_stores.redis.RedisOnlineStoreConfig))
-With the `feature_store.yaml` setup, you can now run `feast apply` to create & populate the registry. 
+- **Custom offline / online stores** 
+  - Generally, custom offline + online stores and providers are supported and can plug in. 
+  - e.g. see [adding a new offline store](https://docs.feast.dev/how-to-guides/adding-a-new-offline-store), [adding a new online store](https://docs.feast.dev/how-to-guides/adding-support-for-a-new-online-store)
+  - Example way of using a custom offline store you define:
+    ```yaml
+    project: test_custom
+    registry: data/registry.db
+    provider: local
+    offline_store:
+        type: feast_custom_offline_store.CustomOfflineStore
+    ```
+
+#### Step 1b: Run `feast plan`
+
+With the `feature_store.yaml` setup, you can now run `feast plan` to see what changes would happen with `feast apply`.
+
+```bash
+feast plan
+```
+
+Sample output:
+```console
+$ feast plan
+
+Created entity driver
+Created feature view driver_hourly_stats
+Created feature service model_v2
+
+No changes to infrastructure
+```
+
+#### Step 1c: Run `feast apply`
+Now run `feast apply`. 
+
+This will parse the feature, data source, and feature service definitions and publish them to the registry. It may also setup some tables in the online store to materialize batch features to (in this case, we set the online store to null so no online store changes will occur). 
+
+```console
+$ feast apply
+
+Created entity driver
+Created feature view driver_hourly_stats
+Created feature service model_v2
+
+Deploying infrastructure for driver_hourly_stats
+```
 
 ### Step 2: Adding the feature repo to version control & set up CI/CD
 
@@ -138,19 +189,10 @@ We setup CI/CD to automatically manage the registry. You'll want e.g. a GitHub w
 - on pull request, runs `feast plan` 
 - on PR merge, runs `feast apply`.
 
-#### **feast plan**
-Go ahead and run `feast plan` in your directory. Sample output:
-```bash
-Created entity driver
-Created feature view driver_hourly_stats
-Created feature service model_v2
-
-No changes to infrastructure
-```
-
+#### Step 2a: Automatically run `feast plan` for new pull requests
 We recommend automatically running `feast plan` on incoming PRs to describe what changes will occur when the PR merges. 
 - This is useful for helping PR reviewers understand the effects of a change.
-- One example is whether a PR may change features that are already depended on in production by another model (e.g. `FeatureService`). 
+- This can prevent breaking models in production (e.g. catching PRs that would change features used by an existing model version (`FeatureService)). 
 
 An example GitHub workflow that runs `feast plan` on PRs (See [feast_plan.yml](../.github/workflows/feast_plan.yml), which is setup in this workshop repo)
 
@@ -203,19 +245,13 @@ jobs:
             ${{ steps.feast_plan.outputs.body }}
 ```
 
-See the result on a PR opened in this repo: https://github.com/feast-dev/feast-workshop/pull/2
+You'll notice the above logic reference two secrets in GitHub corresponding to your AWS credentials. To make this workflow work, create GitHub secrets with your own `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`
 
-![](feast_plan_CI.png)
+See the result on a PR opened in this repo: https://github.com/feast-dev/feast-workshop/pull/3
+<img src="feast_plan_CI.png" width=650 style="padding: 10px 0">
 
-#### **feast apply**
-This will parse the feature, data source, and feature service definitions and publish them to the registry. It may also setup some tables in the online store to materialize batch features to. 
-
-Sample output of `feast apply`:
-```bash
-Registered entity driver_id
-Registered feature view driver_hourly_stats
-Deploying infrastructure for driver_hourly_stats
-```
+#### Step 2b: Automatically run `feast apply` when pull requests are merged
+When a pull request is merged to change the repo, we configure CI/CD to automatically run `feast apply`. 
 
 An example GitHub workflow which runs `feast apply` on PR merge (See [feast_apply.yml](../.github/workflows/feast_apply.yml), which is setup in this workshop repo)
 
@@ -257,13 +293,35 @@ jobs:
           feast apply
 ```
 
-### Step 3 (optional): Access control for the registry
-We don't dive into this deeply, but you don't want to allow arbitrary users to clone the feature repository, change definitions and run `feast apply`. Thus, you should lock down your registry (e.g. with an S3 bucket policy) to only allow changes from your CI/CD user and perhaps some ML engineers.
+### Step 2c (optional): Access control for the registry
+We won't dive into this in detail here, but you don't want to allow arbitrary users to clone the feature repository, change definitions and run `feast apply`.
 
-### Step 4 (optional): Setup a Web UI endpoint
+Thus, you should lock down your registry (e.g. with an S3 bucket policy) to only allow changes from your CI/CD user and perhaps some ML engineers.
+
+### Step 2d (optional): Setup a Web UI endpoint
 Feast comes with an experimental Web UI. Users can already spin this up locally with `feast ui`, but you may want to have a Web UI that is universally available. Here, you'd likely deploy a service that runs `feast ui` on top of a `feature_store.yaml`, with some configuration on how frequently the UI should be refreshing its registry.
 
+```console
+$ feast ui
+
+INFO:     Started server process [10185]
+05/15/2022 04:35:58 PM INFO:Started server process [10185]
+INFO:     Waiting for application startup.
+05/15/2022 04:35:58 PM INFO:Waiting for application startup.
+INFO:     Application startup complete.
+05/15/2022 04:35:58 PM INFO:Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8888 (Press CTRL+C to quit)
+05/15/2022 04:35:58 PM INFO:Uvicorn running on http://0.0.0.0:8888 (Press CTRL+C to quit)
+```
 ![Feast UI](sample_web_ui.png)
+
+### Step 2e (optional): Merge a sample PR in your fork
+In your own fork of the `feast-workshop` project, with the above all setup, try making a change with a pull request! And then merge that pull request to see the change propagate in the registry.
+
+You can verify the change propagated by:
+1. Running the Feast CLI (e.g. `feast feature-views list`)
+2. Checking in the Feast UI (i.e. via `feast ui`)
+3. Fetching features directly (either by referencing the feature directly in `get_historical_features` or by querying a modified `FeatureService`)
 
 ### Other best practices
 Many Feast users use `tags` on objects extensively. Some examples of how this may be used:
@@ -287,7 +345,7 @@ Additionally, users will often want to have a dev/staging environment that's sep
     ├── driver_repo.py
     └── feature_store.yaml
 ```
-## 2b. ML engineers
+## User flow 2: ML engineers
 
 Data scientists or ML engineers can use the defined `FeatureService` (corresponding to model versions) and schedule regular jobs that generate batch predictions (or regularly retrain).  
 
@@ -296,7 +354,7 @@ Feast right now requires timestamps in `get_historical_features`, so what you'll
 ```python
 # Get the latest feature values for unique entities
 entity_df = pd.DataFrame.from_dict({"driver_id": [1001, 1002, 1003, 1004, 1005],})
-entity_df["event_timestamp"] = pd.to_datetime('now')
+entity_df["event_timestamp"] = pd.to_datetime('now', utc=True)
 training_df = store.get_historical_features(
     entity_df=entity_df, features=store.get_feature_service("model_v2"),
 ).to_df()
@@ -305,6 +363,21 @@ training_df = store.get_historical_features(
 predictions = model.predict(training_df)
 ```
 
+### Step 1: See this in action:
+First, go into the `module_0/client` directory and change the `feature_store.yaml` to use your S3 bucket.
+
+Then, run `python test_fetch.py`, which runs the above code (printing out the dataframe instead of the model):
+
+```console
+$ python test_fetch.py
+
+      driver_id                  event_timestamp  conv_rate  acc_rate
+720        1002 2022-05-15 20:46:00.308163+00:00   0.465875  0.315721
+1805       1005 2022-05-15 20:46:00.308163+00:00   0.394072  0.046118
+1083       1003 2022-05-15 20:46:00.308163+00:00   0.869917  0.779562
+359        1001 2022-05-15 20:46:00.308163+00:00   0.404588  0.407571
+1444       1004 2022-05-15 20:46:00.308163+00:00   0.977276  0.051582
+```
 ### A note on scalability
 You may note that the above example uses a `to_df()` method to load the training dataset into memory and may be wondering how this scales if you have very large datasets.
 
@@ -333,10 +406,12 @@ path = store.get_historical_features(
 # Continue with distributed training or batch predictions from the BigQuery dataset.
 ```
 
-## 2c. Data scientists
-Data scientists will be using or authoring features in Feast. They can similarly handle larger datasets with methods like `RetrievalJob#to_bigquery()` as described above.
+## User flow 3: Data scientists
+Data scientists will be using or authoring features in Feast. They can similarly generate in memory dataframes using `get_historical_features(...).to_df()` or larger datasets with methods like `get_historical_features(...).to_bigquery()` as described above.
 
-There are two ways they can use Feast:
+We don't need to do anything new here since data scientists will be doing many of the same steps you've seen in previous user flows.
+
+There are two ways data scientists can use Feast:
 - Use Feast primarily as a way of pulling production ready features. 
   - See the `client/` folder for an example of how users can pull features by only having a `feature_store.yaml` 
   - This is **not recommended** since data scientists cannot register feature services to indicate they depend on certain features in production. 
@@ -352,6 +427,6 @@ Data scientists can also investigate other models and their dependent features /
 # Conclusion
 As a result:
 - You have file sources (possibly remote) and a remote registry (e.g. in S3)
-- Data scientists are able to author + reuse features based on a centrally managed registry. 
-- ML engineers are able to use these same features with a reference to the registry to regularly generating predictions on the latest timestamp.
+- Data scientists are able to author + reuse features based on a centrally managed registry (visible through the Feast CLI or through the Web UI). 
+- ML engineers are able to use these same features with a reference to the registry to regularly generating predictions on the latest timestamp or re-train models.
 - You have CI/CD setup to automatically update the registry + online store infrastructure when changes are merged into the version controlled feature repo. 

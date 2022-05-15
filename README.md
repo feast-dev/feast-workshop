@@ -11,6 +11,9 @@ This workshop assumes you have the following installed:
 - pip
 - Docker & Docker Compose (e.g. `brew install docker docker-compose`)
 
+## Clone the workshop
+We'll be using the code in this repository and also playing with CI/CD, so it's best to fork this repository.
+
 ## Modules
 *See also: [Feast quickstart](https://docs.feast.dev/getting-started/quickstart)*
 
