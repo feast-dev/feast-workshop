@@ -3,7 +3,7 @@ name: Feast plan
 on: [pull_request] # Should be triggered once then manually if possible
 
 jobs:
-  build:
+  feast_plan:
     runs-on: ubuntu-latest
     steps:
       - name: Setup Python
@@ -25,6 +25,9 @@ jobs:
         run: pip install "feast[aws]"
       - name: Capture `feast plan` in a variable
         id: feast_plan
+        env:
+          FEAST_USAGE: "False"
+          IS_TEST: "True"
         run: |
           body=$(cd module_0/feature_repo_aws; feast plan)
           body="${body//'%'/'%25'}"
