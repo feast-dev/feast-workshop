@@ -8,8 +8,8 @@ We focus on a specific example (that does not include online features + models):
   
 <h2>Table of Contents</h2>
 
-- [Reviewing Feast concepts](#reviewing-feast-concepts)
 - [Installing Feast](#installing-feast)
+- [Reviewing Feast concepts](#reviewing-feast-concepts)
 - [User flows](#user-flows)
   - [User flow 1: ML Platform Team](#user-flow-1-ml-platform-team)
     - [Step 0: Setup S3 bucket for registry and file sources](#step-0-setup-s3-bucket-for-registry-and-file-sources)
@@ -31,6 +31,14 @@ We focus on a specific example (that does not include online features + models):
   - [User flow 3: Data Scientists](#user-flow-3-data-scientists)
 - [Conclusion](#conclusion)
 
+# Installing Feast
+Before we get started, first install Feast with AWS dependencies. Due to a bug in Feast 0.21, we'll also need s3fs for this tutorial to directly fetch from an S3 source:
+
+```bash
+pip install "feast[aws]"
+pip install s3fs
+```
+
 # Reviewing Feast concepts
 Let's quickly review some Feast concepts needed to build this use case. You'll need:
 | Concept         | Requirements                                                                                                                                                                                     |
@@ -40,14 +48,6 @@ Let's quickly review some Feast concepts needed to build this use case. You'll n
 | Provider        | In `feature_store.yaml`, specifying the `aws` provider to ensure your registry can be stored in S3                                                                                               |
 | Registry        | In `feature_store.yaml`, specifying a path (within an existing S3 bucket) the registry is written to. Users + model servers will pull from this to get the latest registered features + metadata |
 | Transformations | Feast supports last mile transformations with `OnDemandFeatureView`s that can be re-used                                                                                                         |
-
-# Installing Feast
-Before we get started, first install Feast with AWS dependencies. Due to a bug in Feast 0.21, we'll also need s3fs for this tutorial to directly fetch from an S3 source:
-
-```bash
-pip install "feast[aws]"
-pip install s3fs
-```
 
 # User flows
 There are three user groups here worth considering. The ML platform team, the data scientists, and the ML engineers scheduling models in batch. 
