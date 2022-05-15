@@ -152,7 +152,7 @@ We recommend automatically running `feast plan` on incoming PRs to describe what
 - This is useful for helping PR reviewers understand the effects of a change.
 - One example is whether a PR may change features that are already depended on in production by another model (e.g. `FeatureService`). 
 
-An example GitHub workflow (See [feast_plan.yml](../.github/workflows/feast_plan.yml), which is setup in this workshop repo)
+An example GitHub workflow that runs `feast plan` on PRs (See [feast_plan.yml](../.github/workflows/feast_plan.yml), which is setup in this workshop repo)
 
 ```yaml
 name: Feast plan
@@ -213,6 +213,43 @@ Sample output of `feast apply`:
 Registered entity driver_id
 Registered feature view driver_hourly_stats
 Deploying infrastructure for driver_hourly_stats
+```
+
+An example GitHub workflow which runs `feast apply` on PR merge (See [feast_apply.yml](../.github/workflows/feast_apply.yml), which is setup in this workshop repo)
+
+```yaml
+name: Feast apply
+
+on: [push]
+
+jobs:
+  feast_apply:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup Python
+        id: setup-python
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.7"
+          architecture: x64
+      - name: Set up AWS SDK
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-west-2
+
+      # Run `feast apply`
+      - uses: actions/checkout@v2
+      - name: Install feast
+        run: pip install "feast[aws]"
+      - name: Run feast apply
+        env:
+          FEAST_USAGE: "False"
+          IS_TEST: "True"
+        run: |
+          cd module_0/feature_repo_aws
+          feast apply
 ```
 
 ### Step 3 (optional): Access control for the registry

@@ -1,6 +1,6 @@
 name: Feast plan
 
-on: [pull_request] # Should be triggered once then manually if possible
+on: [pull_request]
 
 jobs:
   feast_plan:
