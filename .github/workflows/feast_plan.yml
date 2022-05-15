@@ -20,6 +20,7 @@ jobs:
           aws-region: us-west-2
 
       # Run `feast plan`
+      # Note: this skips the first two lines because Feast outputs a welcome message
       - uses: actions/checkout@v2
       - name: Install feast
         run: pip install "feast[aws]"
@@ -33,7 +34,7 @@ jobs:
           body="${body//'%'/'%25'}"
           body="${body//$'\n'/'%0A'}"
           body="${body//$'\r'/'%0D'}"
-          body=echo $body | tail -n +2
+          body=$(echo $body | tail -n +2)
           echo "::set-output name=body::$body"
 
       # Post a comment on the PR with the results of `feast plan`
