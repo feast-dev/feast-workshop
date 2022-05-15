@@ -203,6 +203,8 @@ jobs:
             ${{ steps.feast_plan.outputs.body }}
 ```
 
+See the result on a PR opened in this repo: https://github.com/feast-dev/feast-workshop/pull/2
+
 ![](feast_plan_CI.png)
 
 #### **feast apply**
