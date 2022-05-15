@@ -1,18 +1,19 @@
-# Workshop: Learning Feast
+![](images/feast_logo.png)
+## Workshop: Learning Feast
 
-## Overview
+This workshop aims to teach users about [Feast](http://feast.dev), an open-source feature store. 
 
-This workshop aims to teach basic Feast concepts & best practices by example. We walk through how to address common use cases and architectures.
+We explain concepts & best practices by example, and also showcase how to address common use cases.
 
-## Pre-requisites
+<img src="images/hero.png" width=600 style="padding: 5px; background-color: white">
+
+### Pre-requisites
 This workshop assumes you have the following installed:
 - A local development environment that supports running Jupyter notebooks (e.g. VSCode with Jupyter plugin)
 - Python 3.7+
 - pip
 - Docker & Docker Compose (e.g. `brew install docker docker-compose`)
-
-## Clone the workshop
-We'll be using the code in this repository and also playing with CI/CD, so it's best to fork this repository.
+- A fork of this workshop
 
 ## Modules
 *See also: [Feast quickstart](https://docs.feast.dev/getting-started/quickstart), [Feast x Great Expectations tutorial](https://docs.feast.dev/tutorials/validating-historical-features)*
