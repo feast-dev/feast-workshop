@@ -27,7 +27,7 @@ We focus on a specific example (that does not include online features + models):
     - [Other best practices](#other-best-practices)
   - [User flow 2: ML Engineers](#user-flow-2-ml-engineers)
     - [Step 1: See this in action](#step-1-see-this-in-action)
-    - [Step 2: (optional) Scaling to large datasets](#step-2-optional-scaling-to-large-datasets)
+    - [Step 2 (optional): Scaling to large datasets](#step-2-optional-scaling-to-large-datasets)
   - [User flow 3: Data Scientists](#user-flow-3-data-scientists)
 - [Conclusion](#conclusion)
 
@@ -403,7 +403,7 @@ $ python test_fetch.py
 359        1001 2022-05-15 20:46:00.308163+00:00   0.404588  0.407571
 1444       1004 2022-05-15 20:46:00.308163+00:00   0.977276  0.051582
 ```
-### Step 2: (optional) Scaling to large datasets
+### Step 2 (optional): Scaling to large datasets
 You may note that the above example uses a `to_df()` method to load the training dataset into memory and may be wondering how this scales if you have very large datasets.
 
 `get_historical_features` actually returns a `RetrievalJob` object that lazily executes the point-in-time join. The `RetrievalJob` class is extended by each offline store to allow flushing results to e.g. the data warehouse or data lakes. 
