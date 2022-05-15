@@ -13,7 +13,8 @@ This workshop assumes you have the following installed:
 - Python 3.7+
 - pip
 - Docker & Docker Compose (e.g. `brew install docker docker-compose`)
-- A fork of this workshop
+
+Since we'll be learning how to leverage Feast in CI/CD, you'll also need to fork this workshop repository.
 
 ## Modules
 *See also: [Feast quickstart](https://docs.feast.dev/getting-started/quickstart), [Feast x Great Expectations tutorial](https://docs.feast.dev/tutorials/validating-historical-features)*
