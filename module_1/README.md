@@ -10,9 +10,9 @@ In module 1, we focus on building features for online serving, and keeping them 
 
 ### Setting up Feast
 
-First, we install Feast with Redis support:
-```
-pip install "feast[redis]"
+First, we install Feast with Spark and Redis support:
+```bash
+pip install "feast[spark, redis]"
 ```
 
 We have already set up a feature repository in [feature_repo/](feature_repo/). 
@@ -22,8 +22,17 @@ We have already set up a feature repository in [feature_repo/](feature_repo/).
 We then use Docker Compose to spin up a local Kafka cluster and automatically publish events to it. 
 - This leverages a script (in `kafka_demo/`) that creates a topic, reads from `feature_repo/data/driver_stats.parquet`, generates newer timestamps, and emits them to the topic.
 
-```
-docker-compose up
+Start up the Docker daemon and then use Docker Compose to spin up the services as described above:
+```console
+$ docker-compose up
+
+Creating network "module_1_default" with the default driver
+Creating redis     ... done
+Creating zookeeper ... done
+Creating broker    ... done
+Creating kafka_events ... done
+Attaching to zookeeper, redis, broker, kafka_events
+...
 ```
 
 ## Continue with the workshop

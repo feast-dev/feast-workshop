@@ -27,6 +27,7 @@ services:
 
   redis:
     image: redis
+    container_name: redis
     ports:
       - "6379:6379"
 
@@ -36,3 +37,4 @@ services:
       dockerfile: kafka_demo/Dockerfile
     depends_on:
       - broker
+    container_name: kafka_events
