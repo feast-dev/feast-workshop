@@ -33,6 +33,7 @@ jobs:
           body="${body//'%'/'%25'}"
           body="${body//$'\n'/'%0A'}"
           body="${body//$'\r'/'%0D'}"
+          body=echo $body | tail -n +2
           echo "::set-output name=body::$body"
 
       # Post a comment on the PR with the results of `feast plan`
