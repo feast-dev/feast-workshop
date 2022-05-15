@@ -28,15 +28,13 @@ jobs:
         id: feast_plan
         env:
           FEAST_USAGE: "False"
+          FEAST_FORCE_USAGE_UUID: None
           IS_TEST: "True"
         run: |
           body=$(cd module_0/feature_repo_aws; feast plan)
-          echo $body
-          body=$(echo $body | tail -n +2)
           body="${body//'%'/'%25'}"
           body="${body//$'\n'/'%0A'}"
           body="${body//$'\r'/'%0D'}"
-          echo $body
           echo "::set-output name=body::$body"
 
       # Post a comment on the PR with the results of `feast plan`
