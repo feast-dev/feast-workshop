@@ -157,10 +157,10 @@ An example GitHub workflow (See [feast_plan.yml](../.github/workflows/feast_plan
 ```yaml
 name: Feast plan
 
-on: [pull_request]
+on: [pull_request] # Should be triggered once then manually if possible
 
 jobs:
-  build:
+  feast_plan:
     runs-on: ubuntu-latest
     steps:
       - name: Setup Python
@@ -169,13 +169,23 @@ jobs:
         with:
           python-version: "3.7"
           architecture: x64
+      - name: Set up AWS SDK
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-west-2
 
-      # Get the registry from the previous step and run `feast plan`
+      # Run `feast plan`
       - uses: actions/checkout@v2
       - name: Install feast
-        run: pip install feast
+        run: pip install "feast[aws]"
       - name: Capture `feast plan` in a variable
         id: feast_plan
+        env:
+          FEAST_USAGE: "False"
+          FEAST_FORCE_USAGE_UUID: None
+          IS_TEST: "True"
         run: |
           body=$(cd module_0/feature_repo_aws; feast plan)
           body="${body//'%'/'%25'}"

@@ -20,7 +20,6 @@ jobs:
           aws-region: us-west-2
 
       # Run `feast plan`
-      # Note: this skips the first two lines because Feast outputs a welcome message
       - uses: actions/checkout@v2
       - name: Install feast
         run: pip install "feast[aws]"
