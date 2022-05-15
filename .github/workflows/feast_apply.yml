@@ -1,6 +1,9 @@
 name: Feast apply
 
-on: [push]
+on: 
+  push:
+    branches:
+      - main
 
 jobs:
   feast_apply:
