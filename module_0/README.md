@@ -26,7 +26,7 @@ We focus on a specific example (that does not include online features + models):
     - [Step 2e (optional): Merge a sample PR in your fork](#step-2e-optional-merge-a-sample-pr-in-your-fork)
     - [Other best practices](#other-best-practices)
   - [User flow 2: ML Engineers](#user-flow-2-ml-engineers)
-    - [Step 1: See this in action](#step-1-see-this-in-action)
+    - [Step 1: Fetch features for batch scoring](#step-1-fetch-features-for-batch-scoring)
     - [Step 2 (optional): Scaling to large datasets](#step-2-optional-scaling-to-large-datasets)
   - [User flow 3: Data Scientists](#user-flow-3-data-scientists)
 - [Conclusion](#conclusion)
@@ -388,7 +388,7 @@ training_df = store.get_historical_features(
 predictions = model.predict(training_df)
 ```
 
-### Step 1: See this in action
+### Step 1: Fetch features for batch scoring
 First, go into the `module_0/client` directory and change the `feature_store.yaml` to use your S3 bucket.
 
 Then, run `python test_fetch.py`, which runs the above code (printing out the dataframe instead of the model):
