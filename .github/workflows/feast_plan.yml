@@ -31,6 +31,9 @@ jobs:
           IS_TEST: "True"
         run: |
           body=$(cd module_0/feature_repo_aws; feast plan)
+          body="${body//'%'/'%25'}"
+          body="${body//$'\n'/'%0A'}"
+          body="${body//$'\r'/'%0D'}"
           echo $body
           body=$(echo $body | tail -n +2)
           echo $body
