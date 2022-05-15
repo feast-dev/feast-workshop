@@ -455,3 +455,5 @@ As a result:
 - Data scientists are able to author + reuse features based on a centrally managed registry (visible through the Feast CLI or through the Web UI). 
 - ML engineers are able to use these same features with a reference to the registry to regularly generating predictions on the latest timestamp or re-train models.
 - You have CI/CD setup to automatically update the registry + online store infrastructure when changes are merged into the version controlled feature repo. 
+
+Continue with the workshop in [module 1](../module_1/README.md), which uses Feast (with Spark, Kafka, Redis) to generate fresh features and power online model inference.
