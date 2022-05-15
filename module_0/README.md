@@ -222,7 +222,10 @@ An example GitHub workflow which runs `feast apply` on PR merge (See [feast_appl
 ```yaml
 name: Feast apply
 
-on: [push]
+on: 
+  push:
+    branches:
+      - main
 
 jobs:
   feast_apply:
