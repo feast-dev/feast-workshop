@@ -31,7 +31,9 @@ jobs:
           IS_TEST: "True"
         run: |
           body=$(cd module_0/feature_repo_aws; feast plan)
+          echo $body
           body=$(echo $body | tail -n +2)
+          echo $body
           echo "::set-output name=body::$body"
 
       # Post a comment on the PR with the results of `feast plan`
