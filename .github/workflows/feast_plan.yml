@@ -1,0 +1,36 @@
+name: Feast plan
+
+on: [pull_request] # Should be triggered once then manually if possible
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup Python
+        id: setup-python
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.7"
+          architecture: x64
+
+      # Get the registry from the previous step and run `feast plan`
+      - uses: actions/checkout@v2
+      - name: Install feast
+        run: pip install feast
+      - name: Capture `feast plan` in a variable
+        id: feast_plan
+        run: |
+          body=$(cd module_0/feature_repo_aws; feast plan)
+          body="${body//'%'/'%25'}"
+          body="${body//$'\n'/'%0A'}"
+          body="${body//$'\r'/'%0D'}"
+          echo "::set-output name=body::$body"
+
+      # Post a comment on the PR with the results of `feast plan`
+      - name: Create comment
+        uses: peter-evans/create-or-update-comment@v1
+        if: ${{ steps.feast_plan.outputs.body }}
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          body: |
+            ${{ steps.feast_plan.outputs.body }}
