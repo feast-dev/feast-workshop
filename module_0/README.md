@@ -10,8 +10,8 @@ We focus on a specific example (that does not include online features + models):
 
 - [Installing Feast](#installing-feast)
 - [Reviewing Feast concepts](#reviewing-feast-concepts)
-- [User flows](#user-flows)
-  - [User flow 1: ML Platform Team](#user-flow-1-ml-platform-team)
+- [User groups](#user-groups)
+  - [User group 1: ML Platform Team](#user-group-1-ml-platform-team)
     - [Step 0: Setup S3 bucket for registry and file sources](#step-0-setup-s3-bucket-for-registry-and-file-sources)
     - [Step 1: Setup the feature repo](#step-1-setup-the-feature-repo)
       - [Step 1a: Use your configured S3 bucket](#step-1a-use-your-configured-s3-bucket)
@@ -25,14 +25,14 @@ We focus on a specific example (that does not include online features + models):
     - [Step 2d (optional): Setup a Web UI endpoint](#step-2d-optional-setup-a-web-ui-endpoint)
     - [Step 2e (optional): Merge a sample PR in your fork](#step-2e-optional-merge-a-sample-pr-in-your-fork)
     - [Other best practices](#other-best-practices)
-  - [User flow 2: ML Engineers](#user-flow-2-ml-engineers)
+  - [User group 2: ML Engineers](#user-group-2-ml-engineers)
     - [Step 1: Fetch features for batch scoring](#step-1-fetch-features-for-batch-scoring)
     - [Step 2 (optional): Scaling to large datasets](#step-2-optional-scaling-to-large-datasets)
-  - [User flow 3: Data Scientists](#user-flow-3-data-scientists)
+  - [User group 3: Data Scientists](#user-group-3-data-scientists)
 - [Conclusion](#conclusion)
 
 # Installing Feast
-Before we get started, first install Feast with AWS dependencies. Due to a bug in Feast 0.21, we'll also need s3fs for this tutorial to directly fetch from an S3 source:
+Before we get started, first install Feast with AWS dependencies. Due to a bug in Feast 0.21, we'll also need s3fs for this tutorial to directly fetch from an S3 data source:
 
 ```bash
 pip install "feast[aws]"
@@ -52,10 +52,10 @@ Let's quickly review some Feast concepts needed to build this use case. You'll n
 | Offline store                                                                   | The compute that Feast will use to execute point in time joins. Here we use `file`                                                                                                                                                                                                                                                                                   |
 | Online store                                                                    | The low-latency storage Feast can materialize offline feature values to power online inference. In this module, we do not need one.                                                                                                                                                                                                                                  |
 
-# User flows
-There are three user groups here worth considering. The ML platform team, the data scientists, and the ML engineers scheduling models in batch. 
+# User groups
+There are three user groups here worth considering. The ML platform team, the ML engineers running batch inference on models, and the data scientists building the model. 
 
-## User flow 1: ML Platform Team
+## User group 1: ML Platform Team
 The team here sets up the centralized Feast feature repository in GitHub. This is what's seen in `feature_repo_aws/`.
 
 ### Step 0: Setup S3 bucket for registry and file sources
@@ -373,7 +373,7 @@ Additionally, users will often want to have a dev/staging environment that's sep
     ├── driver_repo.py
     └── feature_store.yaml
 ```
-## User flow 2: ML Engineers
+## User group 2: ML Engineers
 
 Data scientists or ML engineers can use the defined `FeatureService` (corresponding to model versions) and schedule regular jobs that generate batch predictions (or regularly retrain).  
 
@@ -434,7 +434,7 @@ path = store.get_historical_features(
 # Continue with distributed training or batch predictions from the BigQuery dataset.
 ```
 
-## User flow 3: Data Scientists
+## User group 3: Data Scientists
 Data scientists will be using or authoring features in Feast. They can similarly generate in memory dataframes using `get_historical_features(...).to_df()` or larger datasets with methods like `get_historical_features(...).to_bigquery()` as described above.
 
 We don't need to do anything new here since data scientists will be doing many of the same steps you've seen in previous user flows.
