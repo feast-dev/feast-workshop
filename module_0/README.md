@@ -1,12 +1,37 @@
-# Module 0: Setting up a feature repo, sharing features, batch predictions
+<h1>Module 0: Setting up a feature repo, sharing features, batch predictions</h1>
 
 Welcome! Here we use a basic example to explain key concepts and user flows in Feast. 
 
 We focus on a specific example (that does not include online features + models):
 - **Use case**: building a platform for data scientists to share features for training offline models
 - **Stack**: you have data in a combination of data warehouses (to be explored in a future module) and data lakes (e.g. S3)
+  
+<h2>Table of Contents</h2>
 
-# Mapping to Feast concepts
+- [Reviewing Feast concepts](#reviewing-feast-concepts)
+- [Installing Feast](#installing-feast)
+- [User flows](#user-flows)
+  - [User flow 1: ML Platform Team](#user-flow-1-ml-platform-team)
+    - [Step 0: Setup S3 bucket for registry and file sources](#step-0-setup-s3-bucket-for-registry-and-file-sources)
+    - [Step 1: Setup the feature repo](#step-1-setup-the-feature-repo)
+      - [Step 1a: Use your configured S3 bucket](#step-1a-use-your-configured-s3-bucket)
+      - [Some further notes and gotchas](#some-further-notes-and-gotchas)
+      - [Step 1b: Run `feast plan`](#step-1b-run-feast-plan)
+      - [Step 1c: Run `feast apply`](#step-1c-run-feast-apply)
+    - [Step 2: Adding the feature repo to version control & set up CI/CD](#step-2-adding-the-feature-repo-to-version-control--set-up-cicd)
+      - [Step 2a: Automatically run `feast plan` for new pull requests](#step-2a-automatically-run-feast-plan-for-new-pull-requests)
+      - [Step 2b: Automatically run `feast apply` when pull requests are merged](#step-2b-automatically-run-feast-apply-when-pull-requests-are-merged)
+    - [Step 2c (optional): Access control for the registry](#step-2c-optional-access-control-for-the-registry)
+    - [Step 2d (optional): Setup a Web UI endpoint](#step-2d-optional-setup-a-web-ui-endpoint)
+    - [Step 2e (optional): Merge a sample PR in your fork](#step-2e-optional-merge-a-sample-pr-in-your-fork)
+    - [Other best practices](#other-best-practices)
+  - [User flow 2: ML Engineers](#user-flow-2-ml-engineers)
+    - [Step 1: See this in action](#step-1-see-this-in-action)
+    - [Step 2: (optional) Scaling to large datasets](#step-2-optional-scaling-to-large-datasets)
+  - [User flow 3: Data Scientists](#user-flow-3-data-scientists)
+- [Conclusion](#conclusion)
+
+# Reviewing Feast concepts
 Let's quickly review some Feast concepts needed to build this use case. You'll need:
 | Concept         | Requirements                                                                                                                                                                                     |
 | :-------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -103,7 +128,7 @@ A quick explanation of what's happening in this `feature_store.yaml`:
 | `offline_store` | Configures offline store, which executes point in time joins                         | `bigquery`, `snowflake.offline`,  `redshift`, `spark`, `trino`  (each have their own extra configs)      |
 | `flags`         | (legacy) Soon to be deprecated way to enable experimental functionality.             |                                                                                                          |
 
-#### **Some further notes and gotchas**
+#### Some further notes and gotchas
 - **Project**
   - Users can only request features from a single project
 - **Provider**
@@ -345,7 +370,7 @@ Additionally, users will often want to have a dev/staging environment that's sep
     ├── driver_repo.py
     └── feature_store.yaml
 ```
-## User flow 2: ML engineers
+## User flow 2: ML Engineers
 
 Data scientists or ML engineers can use the defined `FeatureService` (corresponding to model versions) and schedule regular jobs that generate batch predictions (or regularly retrain).  
 
@@ -363,7 +388,7 @@ training_df = store.get_historical_features(
 predictions = model.predict(training_df)
 ```
 
-### Step 1: See this in action:
+### Step 1: See this in action
 First, go into the `module_0/client` directory and change the `feature_store.yaml` to use your S3 bucket.
 
 Then, run `python test_fetch.py`, which runs the above code (printing out the dataframe instead of the model):
@@ -378,7 +403,7 @@ $ python test_fetch.py
 359        1001 2022-05-15 20:46:00.308163+00:00   0.404588  0.407571
 1444       1004 2022-05-15 20:46:00.308163+00:00   0.977276  0.051582
 ```
-### A note on scalability
+### Step 2: (optional) Scaling to large datasets
 You may note that the above example uses a `to_df()` method to load the training dataset into memory and may be wondering how this scales if you have very large datasets.
 
 `get_historical_features` actually returns a `RetrievalJob` object that lazily executes the point-in-time join. The `RetrievalJob` class is extended by each offline store to allow flushing results to e.g. the data warehouse or data lakes. 
@@ -406,7 +431,7 @@ path = store.get_historical_features(
 # Continue with distributed training or batch predictions from the BigQuery dataset.
 ```
 
-## User flow 3: Data scientists
+## User flow 3: Data Scientists
 Data scientists will be using or authoring features in Feast. They can similarly generate in memory dataframes using `get_historical_features(...).to_df()` or larger datasets with methods like `get_historical_features(...).to_bigquery()` as described above.
 
 We don't need to do anything new here since data scientists will be doing many of the same steps you've seen in previous user flows.
