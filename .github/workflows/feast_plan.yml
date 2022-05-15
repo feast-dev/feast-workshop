@@ -16,7 +16,7 @@ jobs:
       # Get the registry from the previous step and run `feast plan`
       - uses: actions/checkout@v2
       - name: Install feast
-        run: pip install feast
+        run: pip install "feast[aws]"
       - name: Capture `feast plan` in a variable
         id: feast_plan
         run: |
