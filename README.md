@@ -19,7 +19,7 @@ We'll be using the code in this repository and also playing with CI/CD, so it's 
 
 These are meant mostly to be done in order, with examples building on previous concepts.
 
-| Time (min) | Description                                                    | Module                         |
+| Time (min) | Description                                                    | Module&nbsp;&nbsp;&nbsp;       |
 | :--------- | :------------------------------------------------------------- | ------------------------------ |
 | 30         | Setting up Feast projects & CI/CD + powering batch predictions | [Module 0](module_0/README.md) |
 | 10         | Online feature retrieval with Kafka, Spark, Redis              | [Module 1](module_1/README.md) |
