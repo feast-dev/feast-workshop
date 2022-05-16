@@ -3,12 +3,14 @@
 Welcome! Here we use a basic example to explain key concepts and user flows in Feast. 
 
 We focus on a specific example (that does not include online features + models):
-- **Use case**: building a platform for data scientists to share features for training offline models
+- **Goal**: build a platform for data scientists and engineers to share features for training offline models
+- **Use case**: Predicting churn for drivers in a ride-sharing application.
 - **Stack**: you have data in a combination of data warehouses (to be explored in a future module) and data lakes (e.g. S3)
   
 <h2>Table of Contents</h2>
 
 - [Installing Feast](#installing-feast)
+- [Exploring the data](#exploring-the-data)
 - [Reviewing Feast concepts](#reviewing-feast-concepts)
 - [User groups](#user-groups)
   - [User group 1: ML Platform Team](#user-group-1-ml-platform-team)
@@ -43,18 +45,30 @@ Before we get started, first install Feast with AWS dependencies:
 pip install "feast[aws]"
 ```
 
+# Exploring the data
+We've made some dummy data for this workshop in `infra/driver_stats.parquet`. Let's dive into what the data looks like:
+
+```python
+import pandas as pd
+pd.read_parquet("infra/driver_stats.parquet")
+```
+
+![](dataset.png)
+
+This is a set of time-series data with `driver_id` as the primary key (representing the driver entity) and `event_timestamp` as showing when the event happened. 
+
 # Reviewing Feast concepts
-Let's quickly review some Feast concepts needed to build this use case. You'll need:
-| Concept&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | Requirements                                                                                                                                                                                                                                                                                                                                                         |
-| :------------------------------------------------------------------------------ | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Data source                                                                     | Sources of data (in files or in data warehouses). Here we need a `FileSource` (with an S3 path and endpoint override) and `FeatureView`s registered with `feast apply`                                                                                                                                                                                               |
-| Entity                                                                          | The main entity we need here is a driver entity (with `driver_id` as the join key)                                                                                                                                                                                                                                                                                   |
-| Feature view                                                                    | Feature views represent logical groups of features and transformations from data sources keyed on entities. These can be shared / re-used by data scientists and engineers and are registered with `feast apply`. <br><br/> Feast supports reusable last mile transformations with `OnDemandFeatureView`s. We explore this more in [Module 2](../module_2/README.md) |
-| Feature service                                                                 | Feature services group features a given model version depends on. It allows retrieving all necessary model features by using a feature service name.                                                                                                                                                                                                                 |
-| Registry                                                                        | Where Feast stores registered features, data sources, entities, feature services and metadata. Users + model servers will pull from this to get the latest registered features + metadata                                                                                                                                                                            |
-| Provider                                                                        | A customizable interface that Feast uses to orchestrate feature generation / retrieval. <br></br>In `feature_store.yaml`, specifying a built-in provider (e.g. `aws`) ensures your registry can be stored in S3 (and also specifies default offline / online stores)                                                                                                 |
-| Offline store                                                                   | The compute that Feast will use to execute point in time joins. Here we use `file`                                                                                                                                                                                                                                                                                   |
-| Online store                                                                    | The low-latency storage Feast can materialize offline feature values to power online inference. In this module, we do not need one.                                                                                                                                                                                                                                  |
+Let's quickly review some Feast concepts needed to build this ML platform / use case.
+| Concept&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | Description                                                                                                                                                                                                                                                                                                                                                                                               |
+| :------------------------------------------------------------------------------ | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Data source                                                                     | We need a `FileSource` (with an S3 path and endpoint override) to represent the `driver_stats.parquet` which will be hosted in S3. Data sources can generally be files or tables in data warehouses.                                                                                                                                                                                                      |
+| Entity                                                                          | The main entity we need here is a driver entity (with `driver_id` as the join key)                                                                                                                                                                                                                                                                                                                        |
+| Feature view                                                                    | We'll have various feature views corresponding to different logical groups of features and transformations from data sources keyed on entities. These can be shared / re-used by data scientists and engineers and are registered with `feast apply`. <br><br/> Feast also supports reusable last mile transformations with `OnDemandFeatureView`s. We explore this  in [Module 2](../module_2/README.md) |
+| Feature service                                                                 | We build different model versions with different sets of features using feature services (`model_v1`, `model_v2`). Feature services group features a given model version depends on. It allows retrieving all necessary model features by using a feature service name.                                                                                                                                   |
+| Registry                                                                        | Where Feast stores registered features, data sources, entities, feature services and metadata. Users + model servers will pull from this to get the latest registered features + metadata                                                                                                                                                                                                                 |
+| Provider                                                                        | We use the AWS provider here. A provider is a customizable interface that Feast uses to orchestrate feature generation / retrieval. <br></br>In `feature_store.yaml`, the main way to configure a Feast project, specifying a built-in provider (e.g. `aws`) ensures your registry can be stored in S3 (and also specifies default offline / online stores)                                               |
+| Offline store                                                                   | The compute that Feast will use to execute point in time joins. Here we use `file`                                                                                                                                                                                                                                                                                                                        |
+| Online store                                                                    | The low-latency storage Feast can materialize offline feature values to power online inference. In this module, we do not need one.                                                                                                                                                                                                                                                                       |
 
 # User groups
 There are three user groups here worth considering. The ML platform team, the ML engineers running batch inference on models, and the data scientists building the model. 
