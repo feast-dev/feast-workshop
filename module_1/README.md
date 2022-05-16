@@ -27,11 +27,13 @@ Start up the Docker daemon and then use Docker Compose to spin up the services a
 $ docker-compose up
 
 Creating network "module_1_default" with the default driver
-Creating redis     ... done
 Creating zookeeper ... done
-Creating broker    ... done
-Creating kafka_events ... done
-Attaching to zookeeper, redis, broker, kafka_events
+Creating redis     ... done
+Creating broker               ... done
+Creating feast_feature_server ... done
+Creating feast_push_server    ... done
+Creating kafka_events         ... done
+Attaching to zookeeper, redis, broker, feast_push_server, feast_feature_server, kafka_events
 ...
 ```
 
