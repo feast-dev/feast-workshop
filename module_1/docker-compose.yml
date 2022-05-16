@@ -48,8 +48,8 @@ services:
       - "6567:6566"
     volumes:
       - type: bind
-        source: ./feature_repo/data/registry.db
-        target: /data/registry.db
+        source: ./feature_repo/data/local_registry.db
+        target: /data/local_registry.db
     links:
       - redis
 
@@ -62,7 +62,7 @@ services:
       - "6566:6566"
     volumes:
       - type: bind
-        source: ./feature_repo/data/registry.db
-        target: /data/registry.db
+        source: ./feature_repo/data/local_registry.db
+        target: /data/local_registry.db
     links:
       - redis
