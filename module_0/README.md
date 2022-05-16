@@ -384,7 +384,9 @@ Data scientists or ML engineers can use the defined `FeatureService` (correspond
 
 ### Step 0: Understanding `get_historical_features`
 
-Feast right now requires timestamps in `get_historical_features`, so what you'll need to do is append an event timestamp of `now()`. e.g.
+`get_historical_features` is the API by which you can retrieve features (by referencing features directly or via feature services). It will under the hood manage point-in-time joins and avoid data leakage to generate training datasets or power batch scoring.
+
+For batch scoring, you want to get the latest feature values for your entities. Feast right now requires timestamps in `get_historical_features`, so what you'll need to do is append an event timestamp of `now()`. e.g.
 
 ```python
 # Get the latest feature values for unique entities
@@ -399,7 +401,7 @@ predictions = model.predict(training_df)
 ```
 
 ### Step 1: Fetch features for batch scoring (method 1)
-First, go into the `module_0/client` directory and change the `feature_store.yaml` to use your S3 bucket.
+Go into the `module_0/client` directory and change the `feature_store.yaml` to use your S3 bucket.
 
 Then, run `python test_fetch.py`, which runs the above code (printing out the dataframe instead of the model):
 
