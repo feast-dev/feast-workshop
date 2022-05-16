@@ -26,8 +26,9 @@ We focus on a specific example (that does not include online features + models):
     - [Step 2e (optional): Merge a sample PR in your fork](#step-2e-optional-merge-a-sample-pr-in-your-fork)
     - [Other best practices](#other-best-practices)
   - [User group 2: ML Engineers](#user-group-2-ml-engineers)
-    - [Step 1: Fetch features for batch scoring](#step-1-fetch-features-for-batch-scoring)
-    - [Step 2 (optional): Scaling to large datasets](#step-2-optional-scaling-to-large-datasets)
+    - [Step 1: Fetch features for batch scoring (method 1)](#step-1-fetch-features-for-batch-scoring-method-1)
+    - [Step 2: Fetch features for batch scoring (method 2)](#step-2-fetch-features-for-batch-scoring-method-2)
+    - [Step 3 (optional): Scaling to large datasets](#step-3-optional-scaling-to-large-datasets)
   - [User group 3: Data Scientists](#user-group-3-data-scientists)
 - [Conclusion](#conclusion)
 
@@ -391,7 +392,7 @@ training_df = store.get_historical_features(
 predictions = model.predict(training_df)
 ```
 
-### Step 1: Fetch features for batch scoring
+### Step 1: Fetch features for batch scoring (method 1)
 First, go into the `module_0/client` directory and change the `feature_store.yaml` to use your S3 bucket.
 
 Then, run `python test_fetch.py`, which runs the above code (printing out the dataframe instead of the model):
@@ -406,7 +407,25 @@ $ python test_fetch.py
 359        1001 2022-05-15 20:46:00.308163+00:00   0.404588  0.407571
 1444       1004 2022-05-15 20:46:00.308163+00:00   0.977276  0.051582
 ```
-### Step 2 (optional): Scaling to large datasets
+
+### Step 2: Fetch features for batch scoring (method 2)
+You can also not have a `feature_store.yaml` and directly instantiate it in Python. See the `module_0/client_no_yaml` directory for an example of this. The output of `python test_fetch.py` will be identical to the previous step.
+
+A quick snippet of the code:
+```python
+repo_config = RepoConfig(
+    registry=RegistryConfig(path="s3://[YOUR BUCKET]/registry.pb"),
+    project="feast_demo_aws",
+    provider="aws",
+    offline_store="file",  # Could also be the OfflineStoreConfig e.g. FileOfflineStoreConfig
+    online_store="null",  # Could also be the OnlineStoreConfig e.g. RedisOnlineStoreConfig
+)
+store = FeatureStore(config=repo_config)
+...
+training_df = store.get_historical_features(...).to_df()
+```
+
+### Step 3 (optional): Scaling to large datasets
 You may note that the above example uses a `to_df()` method to load the training dataset into memory and may be wondering how this scales if you have very large datasets.
 
 `get_historical_features` actually returns a `RetrievalJob` object that lazily executes the point-in-time join. The `RetrievalJob` class is extended by each offline store to allow flushing results to e.g. the data warehouse or data lakes. 
@@ -419,9 +438,6 @@ registry: gs://[YOUR BUCKET]/registry.pb
 offline_store:
   type: bigquery
   location: EU
-flags:
-  alpha_features: true
-  on_demand_transforms: true
 ```
 
 Retrieving the data with `get_historical_features` gives a `BigQueryRetrievalJob` object ([reference](https://rtd.feast.dev/en/master/index.html#feast.infra.offline_stores.bigquery.BigQueryRetrievalJob)) which exposes a `to_bigquery()` method. Thus, you can do:
