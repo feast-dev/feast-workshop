@@ -6,7 +6,7 @@ In this module, we focus on building features for online serving, and keeping th
 - **Online store**: Redis
 - **Use case**: Predicting churn for drivers in real time.
 
-<img src="module_1_architecture.png" width=750>
+<img src="architecture.png" width=750>
 
 ## Setup
 
