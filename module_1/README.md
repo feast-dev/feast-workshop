@@ -101,4 +101,4 @@ Materialization in Feast by default pulls the latest feature values for each uni
     - The community is ideating on how to improve this. See [RFC-035: Scalable Materialization](https://docs.google.com/document/d/1tCZzClj3H8CfhJzccCytWK-bNDw_lkZk4e3fUbPYIP0/edit#)
 - Users often also implement their own custom providers. The provider interface has a `materialize_single_feature_view` method, which users are free to implement differently (e.g. materializing with Spark or Dataflow jobs).
 
-Feast is actively investigating ways to improve this
+In general, the community is actively investigating ways to speed up materialization. Contributions are welcome!
