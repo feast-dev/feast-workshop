@@ -1,6 +1,6 @@
 FROM python:3.7
 
-RUN pip install "feast[aws,redis]"
+RUN pip install "feast[redis]"
 
 COPY feature_repo/feature_store.yaml feature_store.yaml
 
