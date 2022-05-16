@@ -9,7 +9,5 @@ feature_service = FeatureService(
 )
 
 feature_service = FeatureService(
-    name="model_v2",
-    features=[driver_hourly_stats_view, transformed_conv_rate,],
-    owner="test3@gmail.com",
+    name="model_v2", features=[driver_hourly_stats_view], owner="test3@gmail.com",
 )
