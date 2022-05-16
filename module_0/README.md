@@ -37,11 +37,10 @@ We focus on a specific example (that does not include online features + models):
     - [Can I call `get_historical_features` without an entity dataframe? I want features for all entities.](#can-i-call-get_historical_features-without-an-entity-dataframe-i-want-features-for-all-entities)
 
 # Installing Feast
-Before we get started, first install Feast with AWS dependencies. Due to a bug in Feast 0.21, we'll also need s3fs for this tutorial to directly fetch from an S3 data source:
+Before we get started, first install Feast with AWS dependencies:
 
 ```bash
 pip install "feast[aws]"
-pip install s3fs
 ```
 
 # Reviewing Feast concepts

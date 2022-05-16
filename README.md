@@ -6,7 +6,16 @@ This workshop aims to teach users about [Feast](http://feast.dev), an open-sourc
 
 We explain concepts & best practices by example, and also showcase how to address common use cases.
 
+### What is Feast?
+Feast is an operational system for managing and serving machine learning features to models in production. It can serve features from a low-latency online store (for real-time prediction) or from an offline store (for  batch scoring). 
+
 <img src="images/hero.png" width=600>
+
+### Why Feast?
+Feast solves several common challenges teams face:
+1. Feature reusability and model versioning across teams
+2. Training-serving skew and complex point-in-time-correct data joins
+3. Online feature availability
 
 ### Pre-requisites
 This workshop assumes you have the following installed:
@@ -14,6 +23,8 @@ This workshop assumes you have the following installed:
 - Python 3.7+
 - pip
 - Docker & Docker Compose (e.g. `brew install docker docker-compose`)
+- Terraform ([docs](https://learn.hashicorp.com/tutorials/terraform/install-cli#install-terraform))
+- An AWS account setup with credentials(e.g see [AWS credentials quickstart](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html#cli-configure-quickstart-creds))
 
 Since we'll be learning how to leverage Feast in CI/CD, you'll also need to fork this workshop repository.
 
