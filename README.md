@@ -30,4 +30,5 @@ These are meant mostly to be done in order, with examples building on previous c
 |    TBD     | Feature server deployment (embed, as a service, AWS Lambda)             | TBD                            |
 |    TBD     | Versioning features / models in Feast                                   | TBD                            |
 |    TBD     | Data quality monitoring in Feast                                        | TBD                            |
-
+|    TBD     | Batch transformations                                                   | TBD                            |
+|    TBD     | Stream transformations                                                  | TBD                            |
