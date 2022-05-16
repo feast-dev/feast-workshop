@@ -43,12 +43,10 @@ Run the Jupyter notebook ([feature_repo/workshop.ipynb](feature_repo/module_1.ip
 
 This will guide you through:
 - Registering a `FeatureView` that has a single schema across both a batch source (`FileSource`) with aggregate features and a stream source (`PushSource`).
+  - **Note:** Feast will, in the future, also support directly authoring a `StreamFeatureView` that contains stream transformations / aggregations (e.g. via Spark, Flink, or Bytewax)
 - Materializing feature view values from batch sources to the online store (e.g. Redis).
 - Ingesting feature view values from streaming sources (e.g. window aggregate features from Spark + Kafka)
 - Retrieve features at low latency from Redis through Feast.
-
-{% note %}
-Feast will, in the future, also support directly authoring a `StreamFeatureView` that contains stream transformations / aggregations (e.g. via Spark, Flink, or Bytewax) {% endnote %}
 
 ## Step 3: Setting up push servers + feature servers
 TODO
