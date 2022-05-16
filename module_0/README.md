@@ -26,9 +26,10 @@ We focus on a specific example (that does not include online features + models):
     - [Step 2e (optional): Merge a sample PR in your fork](#step-2e-optional-merge-a-sample-pr-in-your-fork)
     - [Other best practices](#other-best-practices)
   - [User group 2: ML Engineers](#user-group-2-ml-engineers)
+    - [Step 0: Understanding `get_historical_features`](#step-0-understanding-get_historical_features)
     - [Step 1: Fetch features for batch scoring (method 1)](#step-1-fetch-features-for-batch-scoring-method-1)
     - [Step 2: Fetch features for batch scoring (method 2)](#step-2-fetch-features-for-batch-scoring-method-2)
-    - [Step 3 (optional): Scaling to large datasets](#step-3-optional-scaling-to-large-datasets)
+    - [Step 3 (optional): Scaling `get_historical_features` to large datasets](#step-3-optional-scaling-get_historical_features-to-large-datasets)
   - [User group 3: Data Scientists](#user-group-3-data-scientists)
 - [Conclusion](#conclusion)
 - [FAQ](#faq)
@@ -381,6 +382,8 @@ Additionally, users will often want to have a dev/staging environment that's sep
 
 Data scientists or ML engineers can use the defined `FeatureService` (corresponding to model versions) and schedule regular jobs that generate batch predictions (or regularly retrain).  
 
+### Step 0: Understanding `get_historical_features`
+
 Feast right now requires timestamps in `get_historical_features`, so what you'll need to do is append an event timestamp of `now()`. e.g.
 
 ```python
@@ -428,7 +431,7 @@ store = FeatureStore(config=repo_config)
 training_df = store.get_historical_features(...).to_df()
 ```
 
-### Step 3 (optional): Scaling to large datasets
+### Step 3 (optional): Scaling `get_historical_features` to large datasets
 You may note that the above example uses a `to_df()` method to load the training dataset into memory and may be wondering how this scales if you have very large datasets.
 
 `get_historical_features` actually returns a `RetrievalJob` object that lazily executes the point-in-time join. The `RetrievalJob` class is extended by each offline store to allow flushing results to e.g. the data warehouse or data lakes. 
