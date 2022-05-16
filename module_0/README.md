@@ -31,6 +31,9 @@ We focus on a specific example (that does not include online features + models):
     - [Step 3 (optional): Scaling to large datasets](#step-3-optional-scaling-to-large-datasets)
   - [User group 3: Data Scientists](#user-group-3-data-scientists)
 - [Conclusion](#conclusion)
+- [FAQ](#faq)
+    - [How do I generate the entity dataframe?](#how-do-i-generate-the-entity-dataframe)
+    - [Can I call `get_historical_features` without an entity dataframe? I want features for all entities.](#can-i-call-get_historical_features-without-an-entity-dataframe-i-want-features-for-all-entities)
 
 # Installing Feast
 Before we get started, first install Feast with AWS dependencies. Due to a bug in Feast 0.21, we'll also need s3fs for this tutorial to directly fetch from an S3 data source:
@@ -476,3 +479,22 @@ As a result:
 - You have CI/CD setup to automatically update the registry + online store infrastructure when changes are merged into the version controlled feature repo. 
 
 Continue with the workshop in [module 1](../module_1/README.md), which uses Feast (with Spark, Kafka, Redis) to generate fresh features and power online model inference.
+
+# FAQ
+### How do I generate the entity dataframe?
+We expect that there is already some way for you to retrieve labels at model training time. That same source of data should contain the relevant entities.
+
+For example, you may have an events table like:
+
+| user_id | event_timestamp        | action_type      | action_id |
+| ------- | ---------------------- | ---------------- | --------- |
+| 123     | 2021-12-25 12:30:00+00 | add_item_to_cart | 1111      |
+| 123     | 2021-12-25 15:30:00+00 | buy_item         | 2222      |
+| 234     | 2022-12-25 15:30:00+00 | sell_item        | 3333      |
+
+This first two columns of this example table would constitute your `entity_df`. 
+
+**Note**: Feast, in the future, may support tracking these entity "data sources" to simplify `get_historical_features` calls
+
+### Can I call `get_historical_features` without an entity dataframe? I want features for all entities.
+Not today. See [GitHub Issue #1611](https://github.com/feast-dev/feast/issues/1611) for discussions on how we may implement this. Contributions are welcome!

@@ -10,14 +10,17 @@ In this module, we focus on building features for online serving, and keeping th
 
 <h2>Table of Contents</h2>
 
-- [Step 1: Install Feast](#step-1-install-feast)
-- [Step 2: Spin up Kafka + Redis + Feast services](#step-2-spin-up-kafka--redis--feast-services)
-- [Step 3: Materialize batch features & ingest streaming features](#step-3-materialize-batch-features--ingest-streaming-features)
-  - [A note on Feast feature servers + push servers](#a-note-on-feast-feature-servers--push-servers)
+- [Workshop](#workshop)
+  - [Step 1: Install Feast](#step-1-install-feast)
+  - [Step 2: Spin up Kafka + Redis + Feast services](#step-2-spin-up-kafka--redis--feast-services)
+  - [Step 3: Materialize batch features & ingest streaming features](#step-3-materialize-batch-features--ingest-streaming-features)
+    - [A note on Feast feature servers + push servers](#a-note-on-feast-feature-servers--push-servers)
+- [Conclusion](#conclusion)
 - [FAQ](#faq)
-  - [Can feature / push servers refresh their registry in response to an event? e.g. after a PR merges and `feast apply` is run?](#can-feature--push-servers-refresh-their-registry-in-response-to-an-event-eg-after-a-pr-merges-and-feast-apply-is-run)
-  - [How do I speed up or scale up materialization?](#how-do-i-speed-up-or-scale-up-materialization)
+    - [Can feature / push servers refresh their registry in response to an event? e.g. after a PR merges and `feast apply` is run?](#can-feature--push-servers-refresh-their-registry-in-response-to-an-event-eg-after-a-pr-merges-and-feast-apply-is-run)
+    - [How do I speed up or scale up materialization?](#how-do-i-speed-up-or-scale-up-materialization)
 
+# Workshop
 ## Step 1: Install Feast
 
 First, we install Feast with Spark and Redis support:
@@ -95,7 +98,14 @@ The `registry` config maps to constructor arguments for `RegistryConfig` Pydanti
 - In the `feature_store.yaml` above, note that there is a `cache_ttl_seconds` of 5. This ensures that every five seconds, the feature server and push server will expire its registry cache. On the following request, it will refresh its registry by pulling from the registry path.
 - Feast adds a convenience wrapper though so if you specify just `registry: [path]`, Feast will map that to `RegistryConfig(path=[your path])`.
 
-## FAQ
+# Conclusion
+By the end of this module, you will have learned how to build streaming features power real time models with Feast. Feast abstracts away the need to think about data modeling in the online store and helps you:
+- maintain fresh features in the online store by
+  - ingesting batch features into the online store (via `feast materialize` or `feast materialize-incremental`)
+  - ingesting streaming features into the online store (e.g. through `feature_store.push` or a Push server endpoint (`/push`))
+- serve features (e.g. through `feature_store.get_online_features` or through feature servers)
+
+# FAQ
 
 ### Can feature / push servers refresh their registry in response to an event? e.g. after a PR merges and `feast apply` is run?
 Unfortunately, currently the servers don't support this. Feel free to contribute a PR though to enable this! The tricky part here is that Feast would need to keep track of these servers in the registry (or in some other way), which is not the way Feast is currently designed.
