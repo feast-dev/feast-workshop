@@ -14,10 +14,8 @@ In this module, we focus on building features for online serving, and keeping th
 
 First, we install Feast with Spark and Redis support:
 ```bash
-pip install "feast[spark, redis]"
+pip install "feast[spark,redis]"
 ```
-
-We have already set up a feature repository in [feature_repo/](feature_repo/). 
 
 ### Step 1: Docker + Kafka + Redis
 

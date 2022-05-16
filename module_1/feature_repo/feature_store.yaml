@@ -1,5 +1,6 @@
 project: feast_demo_local
 provider: local
+registry: data/local_registry.db
 online_store:
   type: redis
   connection_string: localhost:6379
