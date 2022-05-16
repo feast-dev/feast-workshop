@@ -1,11 +1,12 @@
-![](images/feast_logo.png)
-## Workshop: Learning Feast
+
+
+## <img src="images/feast_icon.png" width=20>&nbsp; Workshop: Learning Feast 
 
 This workshop aims to teach users about [Feast](http://feast.dev), an open-source feature store. 
 
 We explain concepts & best practices by example, and also showcase how to address common use cases.
 
-<img src="images/hero.png" width=600 style="padding: 5px; background-color: white">
+<img src="images/hero.png" width=600>
 
 ### Pre-requisites
 This workshop assumes you have the following installed:
