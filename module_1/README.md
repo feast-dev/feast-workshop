@@ -1,4 +1,4 @@
-# Module 1: Streaming ingestion & online feature retrieval with Kafka, Spark, Redis
+<h1>Module 1: Streaming ingestion & online feature retrieval with Kafka, Spark, Redis</h1>
 
 In this module, we focus on building features for online serving, and keeping them fresh with a combination of batch feature materialization and stream feature ingestion. We'll be roughly working towards the following:
 
@@ -8,16 +8,24 @@ In this module, we focus on building features for online serving, and keeping th
 
 <img src="architecture.png" width=750>
 
-## Setup
+<h2>Table of Contents</h2>
 
-### Setting up Feast
+- [Step 1: Install Feast](#step-1-install-feast)
+- [Step 2: Spin up Kafka + Redis + Feast services](#step-2-spin-up-kafka--redis--feast-services)
+- [Step 3: Materialize batch features & ingest streaming features](#step-3-materialize-batch-features--ingest-streaming-features)
+  - [A note on Feast feature servers + push servers](#a-note-on-feast-feature-servers--push-servers)
+- [FAQ](#faq)
+  - [Can feature / push servers refresh their registry in response to an event? e.g. after a PR merges and `feast apply` is run?](#can-feature--push-servers-refresh-their-registry-in-response-to-an-event-eg-after-a-pr-merges-and-feast-apply-is-run)
+  - [How do I speed up or scale up materialization?](#how-do-i-speed-up-or-scale-up-materialization)
+
+## Step 1: Install Feast
 
 First, we install Feast with Spark and Redis support:
 ```bash
 pip install "feast[spark,redis]"
 ```
 
-### Step 1: Docker + Kafka + Redis
+## Step 2: Spin up Kafka + Redis + Feast services
 
 We then use Docker Compose to spin up a local Kafka cluster and automatically publish events to it. 
 - This leverages a script (in `kafka_demo/`) that creates a topic, reads from `feature_repo/data/driver_stats.parquet`, generates newer timestamps, and emits them to the topic.
@@ -51,7 +59,7 @@ Attaching to zookeeper, redis, broker, feast_push_server, feast_feature_server, 
 ...
 ```
 
-## Step 2: Materialize batch features & ingest streaming features
+## Step 3: Materialize batch features & ingest streaming features
 
 Run the Jupyter notebook ([feature_repo/workshop.ipynb](feature_repo/module_1.ipynb)).
 
@@ -92,7 +100,7 @@ The `registry` config maps to constructor arguments for `RegistryConfig` Pydanti
 ### Can feature / push servers refresh their registry in response to an event? e.g. after a PR merges and `feast apply` is run?
 Unfortunately, currently the servers don't support this. Feel free to contribute a PR though to enable this! The tricky part here is that Feast would need to keep track of these servers in the registry (or in some other way), which is not the way Feast is currently designed.
 
-### How do I scale up materialization?
+### How do I speed up or scale up materialization?
 Materialization in Feast by default pulls the latest feature values for each unique entity locally and writes in batches to the online store.
 
 - Feast users can materialize multiple feature views by using the CLI:
