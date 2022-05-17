@@ -2,7 +2,7 @@
 
 Welcome! Here we use a basic example to explain key concepts and user flows in Feast. 
 
-We focus on a specific example (that does not include online features + models):
+We focus on a specific example (that does not include online features or realtime models):
 - **Goal**: build a platform for data scientists and engineers to share features for training offline models
 - **Use case**: Predicting churn for drivers in a ride-sharing application.
 - **Stack**: you have data in a combination of data warehouses (to be explored in a future module) and data lakes (e.g. S3)
@@ -12,6 +12,7 @@ We focus on a specific example (that does not include online features + models):
 - [Installing Feast](#installing-feast)
 - [Exploring the data](#exploring-the-data)
 - [Reviewing Feast concepts](#reviewing-feast-concepts)
+  - [A quick primer on feature views](#a-quick-primer-on-feature-views)
 - [User groups](#user-groups)
   - [User group 1: ML Platform Team](#user-group-1-ml-platform-team)
     - [Step 0: Setup S3 bucket for registry and file sources](#step-0-setup-s3-bucket-for-registry-and-file-sources)
@@ -28,7 +29,7 @@ We focus on a specific example (that does not include online features + models):
     - [Step 2e (optional): Merge a sample PR in your fork](#step-2e-optional-merge-a-sample-pr-in-your-fork)
     - [Other best practices](#other-best-practices)
   - [User group 2: ML Engineers](#user-group-2-ml-engineers)
-    - [Step 0: Understanding `get_historical_features`](#step-0-understanding-get_historical_features)
+    - [Step 0: Understanding `get_historical_features` and feature services](#step-0-understanding-get_historical_features-and-feature-services)
     - [Step 1: Fetch features for batch scoring (method 1)](#step-1-fetch-features-for-batch-scoring-method-1)
     - [Step 2: Fetch features for batch scoring (method 2)](#step-2-fetch-features-for-batch-scoring-method-2)
     - [Step 3 (optional): Scaling `get_historical_features` to large datasets](#step-3-optional-scaling-get_historical_features-to-large-datasets)
@@ -58,7 +59,7 @@ pd.read_parquet("infra/driver_stats.parquet")
 This is a set of time-series data with `driver_id` as the primary key (representing the driver entity) and `event_timestamp` as showing when the event happened. 
 
 # Reviewing Feast concepts
-Let's quickly review some Feast concepts needed to build this ML platform / use case.
+Let's quickly review some Feast concepts needed to build this ML platform / use case. Don't worry about committing all this to heart. We explore these concepts by example throughout the workshop.
 | Concept&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | Description                                                                                                                                                                                                                                                                                                                                                                                               |
 | :------------------------------------------------------------------------------ | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Data source                                                                     | We need a `FileSource` (with an S3 path and endpoint override) to represent the `driver_stats.parquet` which will be hosted in S3. Data sources can generally be files or tables in data warehouses.                                                                                                                                                                                                      |
@@ -69,6 +70,33 @@ Let's quickly review some Feast concepts needed to build this ML platform / use 
 | Provider                                                                        | We use the AWS provider here. A provider is a customizable interface that Feast uses to orchestrate feature generation / retrieval. <br></br>In `feature_store.yaml`, the main way to configure a Feast project, specifying a built-in provider (e.g. `aws`) ensures your registry can be stored in S3 (and also specifies default offline / online stores)                                               |
 | Offline store                                                                   | The compute that Feast will use to execute point in time joins. Here we use `file`                                                                                                                                                                                                                                                                                                                        |
 | Online store                                                                    | The low-latency storage Feast can materialize offline feature values to power online inference. In this module, we do not need one.                                                                                                                                                                                                                                                                       |
+## A quick primer on feature views
+Let's look at a feature view we have in this module:
+```python
+driver_hourly_stats_view = FeatureView(
+    name="driver_hourly_stats",
+    description="Hourly features",
+    entities=["driver"],
+    ttl=timedelta(seconds=8640000000),
+    schema=[
+        Field(name="conv_rate", dtype=Float32),
+        Field(name="acc_rate", dtype=Float32),
+    ],
+    online=True,
+    source=driver_stats,
+    tags={"production": "True"},
+    owner="test2@gmail.com",
+)
+```
+
+Feature views are one of the most important concepts in Feast.
+
+They represent a group of features that should be physically colocated (e.g. in the offline or online stores). More specifically:
+- The above feature view comes from a single batch source (a `FileSource`). 
+- If we wanted to also use an online store, the above feature view would be colocated in e.g. a Redis hash or a DynamoDB table. 
+- A common need is to have both a batch and stream source for a single set of features. You'd thus have a `FeatureView` that essentially can have two different sources but map to the same physical location in the online store.
+
+It's worth noting that there are multiple types of feature views. `OnDemandFeatureView`s for example enable row-level transformations on data sources and request data, with the output features described in the `schema` parameter.
 
 # User groups
 There are three user groups here worth considering. The ML platform team, the ML engineers running batch inference on models, and the data scientists building the model. 
@@ -395,7 +423,7 @@ Additionally, users will often want to have a dev/staging environment that's sep
 
 Data scientists or ML engineers can use the defined `FeatureService` (corresponding to model versions) and schedule regular jobs that generate batch predictions (or regularly retrain).  
 
-### Step 0: Understanding `get_historical_features`
+### Step 0: Understanding `get_historical_features` and feature services
 
 `get_historical_features` is the API by which you can retrieve features (by referencing features directly or via feature services). It will under the hood manage point-in-time joins and avoid data leakage to generate training datasets or power batch scoring.
 
@@ -412,6 +440,13 @@ training_df = store.get_historical_features(
 # Make batch predictions
 predictions = model.predict(training_df)
 ```
+
+Note that we're using a `FeatureService` in this example. 
+
+A feature service is the recommended way to version a model's feature dependencies. This is useful for many reasons:
+- Data scientists can easily recall what features were used for a given model iteration, or learn what features were useful for a related model
+- Engineers can use that same feature service to retrieve features at serving time, or run A/B experiments across several feature services.
+- Data lineage. Feature services give visibility into what features are depended on in production. Thus, we can prevent accidental changes
 
 ### Step 1: Fetch features for batch scoring (method 1)
 Go into the `module_0/client` directory and change the `feature_store.yaml` to use your S3 bucket.
@@ -430,7 +465,7 @@ $ python test_fetch.py
 ```
 
 ### Step 2: Fetch features for batch scoring (method 2)
-You can also not have a `feature_store.yaml` and directly instantiate it in Python. See the `module_0/client_no_yaml` directory for an example of this. The output of `python test_fetch.py` will be identical to the previous step.
+You can also not have a `feature_store.yaml` and directly instantiate a `RepoConfig` object in Python (which is the in memory representation of the contents of `feature_store.yaml`). See the `module_0/client_no_yaml` directory for an example of this. The output of `python test_fetch.py` will be identical to the previous step.
 
 A quick snippet of the code:
 ```python
