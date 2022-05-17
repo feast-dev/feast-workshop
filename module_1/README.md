@@ -64,22 +64,24 @@ Because we use `redis-py` under the hood, this means Feast also works well with 
 
 ## Step 3: Spin up Kafka + Redis + Feast services
 
-We then use Docker Compose to spin up a local Kafka cluster and automatically publish events to it. 
+We then use Docker Compose to spin up the services we need.
 - This leverages a script (in `kafka_demo/`) that creates a topic, reads from `feature_repo/data/driver_stats.parquet`, generates newer timestamps, and emits them to the topic.
-- This also deploys a Feast push server (on port 6567) + a Feast feature server (on port 6566). These servers embed a `feature_store.yaml` file that enables them to connect to a remote registry. The Dockerfile mostly delegates to calling the `feast serve` CLI command, which instantiates a Feast python server ([docs](https://docs.feast.dev/reference/feature-servers/python-feature-server)):
-  ```yaml
-  FROM python:3.7
+- This also deploys an instance of Redis.
+- This also deploys a Feast push server (on port 6567) + a Feast feature server (on port 6566). 
+  - These servers embed a `feature_store.yaml` file that enables them to connect to a remote registry. The Dockerfile mostly delegates to calling the `feast serve` CLI command, which instantiates a Feast python server ([docs](https://docs.feast.dev/reference/feature-servers/python-feature-server)):
+    ```yaml
+    FROM python:3.7
 
-  RUN pip install "feast[redis]"
+    RUN pip install "feast[redis]"
 
-  COPY feature_repo/feature_store.yaml feature_store.yaml
+    COPY feature_repo/feature_store.yaml feature_store.yaml
 
-  # Needed to reach online store within Docker network.
-  RUN sed -i 's/localhost:6379/redis:6379/g' feature_store.yaml
-  ENV FEAST_USAGE=False
+    # Needed to reach online store within Docker network.
+    RUN sed -i 's/localhost:6379/redis:6379/g' feature_store.yaml
+    ENV FEAST_USAGE=False
 
-  CMD ["feast", "serve", "-h", "0.0.0.0"]
-  ```
+    CMD ["feast", "serve", "-h", "0.0.0.0"]
+    ```
 
 Start up the Docker daemon and then use Docker Compose to spin up the services as described above:
 ```console
