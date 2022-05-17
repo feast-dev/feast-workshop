@@ -234,6 +234,7 @@ $ feast plan
 Created entity driver
 Created feature view driver_hourly_stats
 Created feature service model_v2
+Created feature service model_v1
 
 No changes to infrastructure
 ```
@@ -248,6 +249,7 @@ $ feast apply
 
 Created entity driver
 Created feature view driver_hourly_stats
+Created feature service model_v1
 Created feature service model_v2
 
 Deploying infrastructure for driver_hourly_stats
