@@ -10,7 +10,8 @@ In this module, we introduce the concept of on demand transforms. These are tran
   - [Step 3: Understanding on demand feature views](#step-3-understanding-on-demand-feature-views)
   - [Step 4: Apply features](#step-4-apply-features)
   - [Step 5: Materialize batch features](#step-5-materialize-batch-features)
-  - [Step 6: Test retrieve features](#step-6-test-retrieve-features)
+  - [Step 6 (optional): Explore the repository in the Web UI](#step-6-optional-explore-the-repository-in-the-web-ui)
+  - [Step 7: Test retrieve features](#step-7-test-retrieve-features)
     - [Importing a library in the transformation](#importing-a-library-in-the-transformation)
 - [Conclusion](#conclusion)
   
@@ -90,7 +91,19 @@ driver_daily_features from 1748-08-01 16:41:20-04:56:02 to 2022-05-17 12:41:18-0
 100%|███████████████████████████████████████████████████████████████| 5/5 [00:00<00:00, 1274.48it/s]
 ```
 
-## Step 6: Test retrieve features 
+## Step 6 (optional): Explore the repository in the Web UI
+You can see explore how different Feast objects relate to each other in the UI.
+```bash
+feast ui
+```
+
+For example, you can see the `model_v3` feature service and its resulting features..
+![](sample_ui_fs.png)
+
+... as well as what the underlying on demand transformation looks like
+![](sample_ui.png)
+
+## Step 7: Test retrieve features 
 Now we'll see how these transformations are executed offline at `get_historical_features` and online at `get_online_features` time. We'll also see how `OnDemandFeatureView` interacts with request data, regular feature views, and streaming / push features.
 
 Try out the Jupyter notebook in [client/module_2_client.ipynb](client/module_2_client.ipynb). This is in a separate directory that contains just a `feature_store.yaml`.
