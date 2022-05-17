@@ -15,6 +15,7 @@ In this module, we focus on building features for online serving, and keeping th
   - [Step 2: Inspect the `feature_store.yaml`](#step-2-inspect-the-feature_storeyaml)
   - [Step 3: Spin up Kafka + Redis + Feast services](#step-3-spin-up-kafka--redis--feast-services)
   - [Step 4: Materialize batch features & ingest streaming features](#step-4-materialize-batch-features--ingest-streaming-features)
+    - [Scheduling materialization](#scheduling-materialization)
     - [A note on Feast feature servers + push servers](#a-note-on-feast-feature-servers--push-servers)
 - [Conclusion](#conclusion)
 - [FAQ](#faq)
@@ -109,6 +110,20 @@ We'll switch gears into a Jupyter notebook. This will guide you through:
 - Working with a Feast push server + feature server to ingest and retrieve features through HTTP endpoints (instead of needing `feature_store.yaml` and `FeatureStore` instances)
 
 Run the Jupyter notebook ([feature_repo/workshop.ipynb](feature_repo/module_1.ipynb)).
+
+### Scheduling materialization
+To ensure fresh features, you'll want to schedule materialization jobs regularly. This can be as simple as having a cron job that calls `feast materialize-incremental`.
+
+Users may also be interested in integrating with Airflow, in which case you can build a custom Airflow image with the Feast SDK installed, and then use a `BashOperator`:
+
+```python
+materialize = BashOperator(
+    task_id='materialize',
+    bash_command=f'feast materialize-incremental {datetime.datetime.now().replace(microsecond=0).isoformat()}',
+)
+```
+
+See also [FAQ: How do I speed up or scale up materialization?](#how-do-i-speed-up-or-scale-up-materialization)
 
 ### A note on Feast feature servers + push servers
 The above notebook introduces a way to curl an HTTP endpoint to push or retrieve features from Redis.
