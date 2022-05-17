@@ -13,9 +13,9 @@ Feast is an operational system for managing and serving machine learning feature
 
 ### Why Feast?
 Feast solves several common challenges teams face:
-1. Feature reusability and model versioning across teams
+1. Lack of feature reuse across teams
 2. Training-serving skew and complex point-in-time-correct data joins
-3. Online feature availability
+3. Difficulty operationalizing features for online inference
 
 ### Pre-requisites
 This workshop assumes you have the following installed:
@@ -27,6 +27,10 @@ This workshop assumes you have the following installed:
 - An AWS account setup with credentials(e.g see [AWS credentials quickstart](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html#cli-configure-quickstart-creds))
 
 Since we'll be learning how to leverage Feast in CI/CD, you'll also need to fork this workshop repository.
+
+**Caveats** 
+- M1 Macbook development is untested with this flow. See also [How to run / develop for Feast on M1 Macs](https://github.com/feast-dev/feast/issues/2105).
+- Windows development is untested with this flow.
 
 ## Modules
 *See also: [Feast quickstart](https://docs.feast.dev/getting-started/quickstart), [Feast x Great Expectations tutorial](https://docs.feast.dev/tutorials/validating-historical-features)*
