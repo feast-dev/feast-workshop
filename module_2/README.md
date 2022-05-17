@@ -2,6 +2,10 @@
 
 In this module, we introduce the concept of on demand transforms. These are transformations that execute on-the-fly and accept as input other feature views or request data.
 
+On a high level, the flow of data will look like
+
+![](odfv_arch.png)
+
 <h2>Table of Contents</h2>
 
 - [Workshop](#workshop)
@@ -60,6 +64,8 @@ This is obviously not a particularly useful transformation, but is helpful for e
   - applies a transformation on top of those sources (batch, streaming, or request).
     - Because a source feature view can have a `PushSource`, this means we can also apply a consistent last-mile transformation on both batch and streaming features.
   - Note that the above has a single `inputs` Pandas dataframe as input. This joins together all the sources for the `OnDemandFeatureView`
+
+![](odfv_arch.png)
 
 ## Step 4: Apply features
 ```console
