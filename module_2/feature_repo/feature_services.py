@@ -17,3 +17,16 @@ feature_service = FeatureService(
     ],
     owner="test3@gmail.com",
 )
+
+feature_service = FeatureService(
+    name="model_v3",
+    features=[
+        driver_hourly_stats_view,
+        driver_daily_features_view,
+        transformed_conv_rate,
+        avg_hourly_miles_driven,
+        location_features,
+    ],
+    owner="test3@gmail.com",
+)
+
