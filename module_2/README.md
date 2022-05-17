@@ -67,6 +67,8 @@ This is obviously not a particularly useful transformation, but is helpful for e
 
 ![](odfv_arch.png)
 
+**Note:** There is an open issue for supporting Python based on demand transforms (without Pandas). Benchmarks have indicated this could result in significantly faster online performance. See [#2261](https://github.com/feast-dev/feast/issues/2261) for details.
+
 ## Step 4: Apply features
 ```console
 $ feast apply
