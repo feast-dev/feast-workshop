@@ -67,7 +67,7 @@ Let's quickly review some Feast concepts needed to build this ML platform / use 
 | Feature view                                                                    | We'll have various feature views corresponding to different logical groups of features and transformations from data sources keyed on entities. These can be shared / re-used by data scientists and engineers and are registered with `feast apply`. <br><br/> Feast also supports reusable last mile transformations with `OnDemandFeatureView`s. We explore this  in [Module 2](../module_2/README.md) |
 | Feature service                                                                 | We build different model versions with different sets of features using feature services (`model_v1`, `model_v2`). Feature services group features a given model version depends on. It allows retrieving all necessary model features by using a feature service name.                                                                                                                                   |
 | Registry                                                                        | Where Feast stores registered features, data sources, entities, feature services and metadata. Users + model servers will pull from this to get the latest registered features + metadata                                                                                                                                                                                                                 |
-| Provider                                                                        | We use the AWS provider here. A provider is a customizable interface that Feast uses to orchestrate feature generation / retrieval. <br></br>In `feature_store.yaml`, the main way to configure a Feast project, specifying a built-in provider (e.g. `aws`) ensures your registry can be stored in S3 (and also specifies default offline / online stores)                                               |
+| Provider                                                                        | We use the AWS provider here. A provider is a customizable interface that Feast uses to orchestrate feature generation / retrieval. <br></br>Specifying a built-in provider (e.g. `aws`) ensures your registry can be stored in S3 (and also specifies default offline / online stores)                                                                                                                   |
 | Offline store                                                                   | The compute that Feast will use to execute point in time joins. Here we use `file`                                                                                                                                                                                                                                                                                                                        |
 | Online store                                                                    | The low-latency storage Feast can materialize offline feature values to power online inference. In this module, we do not need one.                                                                                                                                                                                                                                                                       |
 ## A quick primer on feature views
@@ -99,10 +99,10 @@ They represent a group of features that should be physically colocated (e.g. in 
 It's worth noting that there are multiple types of feature views. `OnDemandFeatureView`s for example enable row-level transformations on data sources and request data, with the output features described in the `schema` parameter.
 
 # User groups
-There are three user groups here worth considering. The ML platform team, the ML engineers running batch inference on models, and the data scientists building the model. 
+There are three user groups here worth considering. The ML platform team, the ML engineers running batch inference on models, and the data scientists building models. 
 
 ## User group 1: ML Platform Team
-The team here sets up the centralized Feast feature repository in GitHub. This is what's seen in `feature_repo_aws/`.
+The team here sets up the centralized Feast feature repository and CI/CD in GitHub. This is what's seen in `feature_repo_aws/`.
 
 ### Step 0: Setup S3 bucket for registry and file sources
 This assumes you have an AWS account & Terraform setup. If you don't:
@@ -135,7 +135,7 @@ project_name = "danny"
 ```
 
 ### Step 1: Setup the feature repo
-The first thing a platform team needs to do is setup the `feature_store.yaml` within a version controlled repo like GitHub. We've setup a sample feature repository in `feature_repo_aws/`
+The first thing a platform team needs to do is setup a `feature_store.yaml` file within a version controlled repo like GitHub. `feature_store.yaml` is the primary way to configure an overall Feast project. We've setup a sample feature repository in `feature_repo_aws/`
 
 #### Step 1a: Use your configured S3 bucket
 There are two files in `feature_repo_aws` you need to change to point to your S3 bucket:
@@ -425,9 +425,9 @@ Data scientists or ML engineers can use the defined `FeatureService` (correspond
 
 ### Step 0: Understanding `get_historical_features` and feature services
 
-`get_historical_features` is the API by which you can retrieve features (by referencing features directly or via feature services). It will under the hood manage point-in-time joins and avoid data leakage to generate training datasets or power batch scoring.
+`get_historical_features` is an API by which you can retrieve features (by referencing features directly or via feature services). It will under the hood manage point-in-time joins and avoid data leakage to generate training datasets or power batch scoring.
 
-For batch scoring, you want to get the latest feature values for your entities. Feast right now requires timestamps in `get_historical_features`, so what you'll need to do is append an event timestamp of `now()`. e.g.
+For batch scoring, you want to get the latest feature values for your entities. Feast requires timestamps in `get_historical_features`, so what you'll need to do is append an event timestamp of `now()`. e.g.
 
 ```python
 # Get the latest feature values for unique entities
