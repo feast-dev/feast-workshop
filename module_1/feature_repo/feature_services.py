@@ -8,6 +8,6 @@ feature_service = FeatureService(
     owner="test3@gmail.com",
 )
 
-feature_service = FeatureService(
+feature_service_2 = FeatureService(
     name="model_v2", features=[driver_hourly_stats_view], owner="test3@gmail.com",
 )
