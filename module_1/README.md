@@ -12,8 +12,9 @@ In this module, we focus on building features for online serving, and keeping th
 
 - [Workshop](#workshop)
   - [Step 1: Install Feast](#step-1-install-feast)
-  - [Step 2: Spin up Kafka + Redis + Feast services](#step-2-spin-up-kafka--redis--feast-services)
-  - [Step 3: Materialize batch features & ingest streaming features](#step-3-materialize-batch-features--ingest-streaming-features)
+  - [Step 2: Inspect the `feature_store.yaml`](#step-2-inspect-the-feature_storeyaml)
+  - [Step 3: Spin up Kafka + Redis + Feast services](#step-3-spin-up-kafka--redis--feast-services)
+  - [Step 4: Materialize batch features & ingest streaming features](#step-4-materialize-batch-features--ingest-streaming-features)
     - [A note on Feast feature servers + push servers](#a-note-on-feast-feature-servers--push-servers)
 - [Conclusion](#conclusion)
 - [FAQ](#faq)
@@ -28,11 +29,44 @@ First, we install Feast with Spark and Redis support:
 pip install "feast[spark,redis]"
 ```
 
-## Step 2: Spin up Kafka + Redis + Feast services
+## Step 2: Inspect the `feature_store.yaml`
+
+```yaml
+project: feast_demo_local
+provider: local
+registry: 
+  path: data/local_registry.db
+  cache_ttl_seconds: 5
+online_store:
+  type: redis
+  connection_string: localhost:6379
+offline_store:
+  type: file
+```
+
+The key thing to note for now is the online store has been configured to be Redis. This is specifically for a single Redis node. If you want to use a Redis cluster, then you'd change this to something like:
+
+```yaml
+project: feast_demo_local
+provider: local
+registry: 
+  path: data/local_registry.db
+  cache_ttl_seconds: 5
+online_store:
+  type: redis
+  redis_type: redis_cluster
+  connection_string: "redis1:6379,redis2:6379,ssl=true,password=my_password"
+offline_store:
+  type: file
+```
+
+Because we use `redis-py` under the hood, this means Feast also works well with hosted Redis instances like AWS Elasticache ([docs](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/ElastiCache-Getting-Started-Tutorials-Connecting.html)). 
+
+## Step 3: Spin up Kafka + Redis + Feast services
 
 We then use Docker Compose to spin up a local Kafka cluster and automatically publish events to it. 
 - This leverages a script (in `kafka_demo/`) that creates a topic, reads from `feature_repo/data/driver_stats.parquet`, generates newer timestamps, and emits them to the topic.
-- This also deploys a Feast push server (on port 6567) + a Feast feature server (on port 6566). The Dockerfile mostly delegates to calling the `feast serve` CLI command:
+- This also deploys a Feast push server (on port 6567) + a Feast feature server (on port 6566). These servers embed a `feature_store.yaml` file that enables them to connect to a remote registry. The Dockerfile mostly delegates to calling the `feast serve` CLI command, which instantiates a Feast python server ([docs](https://docs.feast.dev/reference/feature-servers/python-feature-server)):
   ```yaml
   FROM python:3.7
 
@@ -62,7 +96,7 @@ Attaching to zookeeper, redis, broker, feast_push_server, feast_feature_server, 
 ...
 ```
 
-## Step 3: Materialize batch features & ingest streaming features
+## Step 4: Materialize batch features & ingest streaming features
 
 We'll switch gears into a Jupyter notebook. This will guide you through:
 - Registering a `FeatureView` that has a single schema across both a batch source (`FileSource`) with aggregate features and a stream source (`PushSource`).
