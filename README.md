@@ -41,7 +41,7 @@ These are meant mostly to be done in order, with examples building on previous c
 | :--------: | :---------------------------------------------------------------------- | :----------------------------- |
 |   30-45    | Setting up Feast projects & CI/CD + powering batch predictions          | [Module 0](module_0/README.md) |
 |   15-20    | Streaming ingestion & online feature retrieval with Kafka, Spark, Redis | [Module 1](module_1/README.md) |
-|     10     | On demand transformations                                               | [Module 2](module_2/README.md) |
+|   10-15    | Real-time feature engineering with on demand transformations            | [Module 2](module_2/README.md) |
 |    TBD     | Feature server deployment (embed, as a service, AWS Lambda)             | TBD                            |
 |    TBD     | Versioning features / models in Feast                                   | TBD                            |
 |    TBD     | Data quality monitoring in Feast                                        | TBD                            |
