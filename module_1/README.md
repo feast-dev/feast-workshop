@@ -32,7 +32,7 @@ pip install "feast[spark,redis]"
 
 We then use Docker Compose to spin up a local Kafka cluster and automatically publish events to it. 
 - This leverages a script (in `kafka_demo/`) that creates a topic, reads from `feature_repo/data/driver_stats.parquet`, generates newer timestamps, and emits them to the topic.
-- This also deploys a Feast push server + a Feast feature server. The Dockerfile mostly delegates to calling the `feast serve` CLI command:
+- This also deploys a Feast push server (on port 6567) + a Feast feature server (on port 6566). The Dockerfile mostly delegates to calling the `feast serve` CLI command:
   ```yaml
   FROM python:3.7
 
@@ -64,15 +64,15 @@ Attaching to zookeeper, redis, broker, feast_push_server, feast_feature_server, 
 
 ## Step 3: Materialize batch features & ingest streaming features
 
-Run the Jupyter notebook ([feature_repo/workshop.ipynb](feature_repo/module_1.ipynb)).
-
-This will guide you through:
+We'll switch gears into a Jupyter notebook. This will guide you through:
 - Registering a `FeatureView` that has a single schema across both a batch source (`FileSource`) with aggregate features and a stream source (`PushSource`).
   - **Note:** Feast will, in the future, also support directly authoring a `StreamFeatureView` that contains stream transformations / aggregations (e.g. via Spark, Flink, or Bytewax)
 - Materializing feature view values from batch sources to the online store (e.g. Redis).
 - Ingesting feature view values from streaming sources (e.g. window aggregate features from Spark + Kafka)
 - Retrieve features at low latency from Redis through Feast.
 - Working with a Feast push server + feature server to ingest and retrieve features through HTTP endpoints (instead of needing `feature_store.yaml` and `FeatureStore` instances)
+
+Run the Jupyter notebook ([feature_repo/workshop.ipynb](feature_repo/module_1.ipynb)).
 
 ### A note on Feast feature servers + push servers
 The above notebook introduces a way to curl an HTTP endpoint to push or retrieve features from Redis.
@@ -96,7 +96,7 @@ offline_store:
 
 The `registry` config maps to constructor arguments for `RegistryConfig` Pydantic model([reference](https://rtd.feast.dev/en/master/index.html#feast.repo_config.RegistryConfig)).
 - In the `feature_store.yaml` above, note that there is a `cache_ttl_seconds` of 5. This ensures that every five seconds, the feature server and push server will expire its registry cache. On the following request, it will refresh its registry by pulling from the registry path.
-- Feast adds a convenience wrapper though so if you specify just `registry: [path]`, Feast will map that to `RegistryConfig(path=[your path])`.
+- Feast adds a convenience wrapper so if you specify just `registry: [path]`, Feast will map that to `RegistryConfig(path=[your path])`.
 
 # Conclusion
 By the end of this module, you will have learned how to build streaming features power real time models with Feast. Feast abstracts away the need to think about data modeling in the online store and helps you:
