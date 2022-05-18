@@ -57,7 +57,12 @@ def create_stream(topic_name, servers):
     iteration = 1
     while True:
         for row in df[
-            ["driver_id", "event_timestamp", "created", "miles_driven",]
+            [
+                "driver_id",
+                "event_timestamp",
+                "created",
+                "miles_driven",
+            ]
         ].to_dict("records"):
             # Make event one more year recent to simulate fresher data
             row["event_timestamp"] = (

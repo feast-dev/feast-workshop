@@ -1,9 +1,6 @@
 from datetime import timedelta
 
-from feast import (
-    FeatureView,
-    Field,
-)
+from feast import FeatureView, Field
 from feast.types import Float32
 
 from data_sources import *
@@ -21,5 +18,5 @@ driver_hourly_stats_view = FeatureView(
     online=True,
     source=driver_stats,
     tags={"production": "True"},
-    owner="test2@gmail.com",
+    owner="martin.abeleda@gmail.com",
 )

@@ -13,7 +13,9 @@ driver_daily_features_view = FeatureView(
     name="driver_daily_features",
     entities=["driver"],
     ttl=timedelta(seconds=8640000000),
-    schema=[Field(name="daily_miles_driven", dtype=Float32),],
+    schema=[
+        Field(name="daily_miles_driven", dtype=Float32),
+    ],
     online=True,
     source=driver_stats_push_source,
     tags={"production": "True"},
@@ -33,5 +35,5 @@ driver_hourly_stats_view = FeatureView(
     online=True,
     source=driver_stats,
     tags={"production": "True"},
-    owner="test2@gmail.com",
+    owner="martin.abeleda@gmail.com",
 )

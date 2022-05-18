@@ -60,7 +60,9 @@ def transformed_conv_rate(inputs: pd.DataFrame) -> pd.DataFrame:
 
 @on_demand_feature_view(
     sources=[driver_daily_features_view],
-    schema=[Field(name="avg_hourly_miles_driven", dtype=Float64),],
+    schema=[
+        Field(name="avg_hourly_miles_driven", dtype=Float64),
+    ],
 )
 def avg_hourly_miles_driven(inputs: pd.DataFrame) -> pd.DataFrame:
     df = pd.DataFrame()

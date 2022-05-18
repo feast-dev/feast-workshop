@@ -10,10 +10,11 @@ driver_stats = FileSource(
     timestamp_field="event_timestamp",
     created_timestamp_column="created",
     description="A table describing the stats of a driver based on hourly logs",
-    owner="test2@gmail.com",
+    owner="martin.abeleda@gmail.com",
 )
 
 # A push source is useful if you have upstream systems that transform features (e.g. stream processing jobs)
 driver_stats_push_source = PushSource(
-    name="driver_stats_push_source", batch_source=driver_stats,
+    name="driver_stats_push_source",
+    batch_source=driver_stats,
 )
