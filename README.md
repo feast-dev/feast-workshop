@@ -14,8 +14,8 @@ Feast is an operational system for managing and serving machine learning feature
 ### Why Feast?
 Feast solves several common challenges teams face:
 1. Lack of feature reuse across teams
-2. Training-serving skew and complex point-in-time-correct data joins
-3. Difficulty operationalizing features for online inference
+2. Complex point-in-time-correct data joins for generating training data
+3. Difficulty operationalizing features for online inference while minimizing training / serving skew
 
 ### Pre-requisites
 This workshop assumes you have the following installed:

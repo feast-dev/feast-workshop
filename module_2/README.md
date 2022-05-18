@@ -11,7 +11,7 @@ On a high level, the flow of data will look like
 - [Workshop](#workshop)
   - [Step 1: Install Feast](#step-1-install-feast)
   - [Step 2: Look at the data we have](#step-2-look-at-the-data-we-have)
-  - [Step 3: Understanding on demand feature views](#step-3-understanding-on-demand-feature-views)
+  - [Step 3: Understanding on demand feature views and request data](#step-3-understanding-on-demand-feature-views-and-request-data)
   - [Step 4: Apply features](#step-4-apply-features)
   - [Step 5: Materialize batch features](#step-5-materialize-batch-features)
   - [Step 6 (optional): Explore the repository in the Web UI](#step-6-optional-explore-the-repository-in-the-web-ui)
@@ -38,10 +38,20 @@ pd.read_parquet("data/driver_stats_lat_lon.parquet")
 
 ![](data.png)
 
-## Step 3: Understanding on demand feature views
-Let's look at an example on demand feature view in this repo
+## Step 3: Understanding on demand feature views and request data
+Let's look at an example in this repo
 
 ```python
+# The request data source representing features that at serving time are only 
+# available from the request
+val_to_add_request = RequestSource(
+    name="vals_to_add",
+    schema=[
+        Field(name="val_to_add", dtype=Int64),
+        Field(name="val_to_add_2", dtype=Int64),
+    ],
+)
+
 @on_demand_feature_view(
     sources=[driver_hourly_stats_view, val_to_add_request],
     schema=[
@@ -58,12 +68,20 @@ def transformed_conv_rate(inputs: pd.DataFrame) -> pd.DataFrame:
 
 This is obviously not a particularly useful transformation, but is helpful for explaining on demand transforms and request data.
 - **Request data** is any data available only from the request (at serving time). -
-  - An example of this may be the amount of a credit card transaction that may be fraudulent. In the above example, there are `val_to_add` and `val_to_add_2` values passed in at request time.
+  - An example of this may be the amount of a credit card transaction that may be fraudulent. In the above example, there are `val_to_add` and `val_to_add_2` values passed in at request time, registered in Feast via a `RequestSource`.
 - An **on demand feature view**:
   - can take as input sources other feature views or request data. 
   - applies a transformation on top of those sources (batch, streaming, or request).
     - Because a source feature view can have a `PushSource`, this means we can also apply a consistent last-mile transformation on both batch and streaming features.
   - Note that the above has a single `inputs` Pandas dataframe as input. This joins together all the sources for the `OnDemandFeatureView`
+
+**Why would a data scientist want to use `OnDemandFeatureView`?**
+
+Recall that in the previous module, we saw that using `PushSource` is valuable for ensuring consistent access to fresher feature values (at serving time) by integrating with streaming sources. The rationale is similar here:
+- Without `OnDemandFeatureView`s, data scientists will join batch sources and transform on that data directly. At serving time, the ML engineer now needs to think about each feature is pre-computed or whether it needs to be computed on the fly due to dependencies on request data. This will increase the time to production for the model.
+- With `OnDemandFeatureView`s, ML engineers can simply inspect the `FeatureService` for `RequestSource`s in any of the features, and pass that into `store.get_online_features`. 
+
+Zooming back out, we can see what complexity Feast abstracts away from data scientists and engineers. 
 
 ![](odfv_arch.png)
 
