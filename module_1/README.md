@@ -14,7 +14,9 @@ In this module, we focus on building features for online serving, and keeping th
   - [Step 1: Install Feast](#step-1-install-feast)
   - [Step 2: Inspect the `feature_store.yaml`](#step-2-inspect-the-feature_storeyaml)
   - [Step 3: Spin up Kafka + Redis + Feast services](#step-3-spin-up-kafka--redis--feast-services)
-  - [Step 4: Materialize batch features & ingest streaming features](#step-4-materialize-batch-features--ingest-streaming-features)
+  - [Step 4: Why register streaming features in Feast?](#step-4-why-register-streaming-features-in-feast)
+    - [Understanding the PushSource](#understanding-the-pushsource)
+  - [Step 5: Materialize batch features & ingest streaming features](#step-5-materialize-batch-features--ingest-streaming-features)
     - [Scheduling materialization](#scheduling-materialization)
     - [A note on Feast feature servers + push servers](#a-note-on-feast-feature-servers--push-servers)
 - [Conclusion](#conclusion)
@@ -99,8 +101,53 @@ Creating kafka_events         ... done
 Attaching to zookeeper, redis, broker, feast_push_server, feast_feature_server, kafka_events
 ...
 ```
+## Step 4: Why register streaming features in Feast?
+Relying on streaming features in Feast enables data scientists to increase freshness of the features they rely on, decreasing training / serving skew. 
 
-## Step 4: Materialize batch features & ingest streaming features
+A data scientist may start out their feature engineering in their notebook by directly reading from the batch source (e.g. a table they join in a data warehouse). 
+
+But then they hand this over to an engineer to productionize and realize that the model performance is different because pipeline delays lead to stale data being served. 
+
+With Feast, at training data generation time, the data scientist can directly depend on a `FeatureView` with a `PushSource`, which ensures consistent access to fresh data at serving time, thus resulting in less training / serving skew.
+
+### Understanding the PushSource
+
+Let's take a look at an example `FeatureView` in this repo that uses a `PushSource`:
+
+```python
+from feast import (
+    FileSource,
+    PushSource,
+)
+driver_stats = FileSource(
+    name="driver_stats_source",
+    path="data/driver_stats.parquet",
+    timestamp_field="event_timestamp",
+    created_timestamp_column="created",
+    description="A table describing the stats of a driver based on hourly logs",
+    owner="test2@gmail.com",
+)
+# A push source is useful if you have upstream systems that transform features (e.g. stream processing jobs)
+driver_stats_push_source = PushSource(
+    name="driver_stats_push_source", batch_source=driver_stats,
+)
+driver_daily_features_view = FeatureView(
+    name="driver_daily_features",
+    entities=["driver"],
+    ttl=timedelta(seconds=8640000000),
+    schema=[Field(name="daily_miles_driven", dtype=Float32),],
+    online=True,
+    source=driver_stats_push_source,
+    tags={"production": "True"},
+    owner="test2@gmail.com",
+)
+```
+
+Using a `PushSource` alleviates this. The data scientist by using the `driver_daily_features` feature view that at serving time, the model will have access to as fresh of a value as possible. Engineers now just need to make sure that any registered `PushSource`s have feature values being regularly pushed to make the feature consistently available.
+
+In the future, Feast will support the concept of a `StreamFeatureView` as well, which simplifies the life for the engineer further. This will directly ingest from a streaming source (e.g. Kafka) and apply transformations so an engineer doesn't need to scan for `PushSource`s and push data into Feast.
+
+## Step 5: Materialize batch features & ingest streaming features
 
 We'll switch gears into a Jupyter notebook. This will guide you through:
 - Registering a `FeatureView` that has a single schema across both a batch source (`FileSource`) with aggregate features and a stream source (`PushSource`).
