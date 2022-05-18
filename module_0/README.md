@@ -107,8 +107,15 @@ The team here sets up the centralized Feast feature repository and CI/CD in GitH
 ### Step 0: Setup S3 bucket for registry and file sources
 This assumes you have an AWS account & Terraform setup. If you don't:
 - Set up an AWS account & setup your credentials as per the [AWS quickstart](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html#cli-configure-quickstart-creds)
+  - You could skip installing the AWS CLI by modifying `infra/main.tf` to have:
+    ```HCL
+    provider "aws" {
+      region = "us-west-2"
+      access_key = "my-access-key"
+      secret_key = "my-secret-key"
+    }
+    ```
 - Install [Terraform](https://learn.hashicorp.com/tutorials/terraform/install-cli#install-terraform)
-
 
 We've made a simple Terraform project to help with S3 bucket creation (and uploading the test data we need):
 ```bash
