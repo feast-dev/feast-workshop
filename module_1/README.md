@@ -12,11 +12,12 @@ In this module, we focus on building features for online serving, and keeping th
 
 - [Workshop](#workshop)
   - [Step 1: Install Feast](#step-1-install-feast)
-  - [Step 2: Inspect the `feature_store.yaml`](#step-2-inspect-the-feature_storeyaml)
-  - [Step 3: Spin up Kafka + Redis + Feast services](#step-3-spin-up-kafka--redis--feast-services)
-  - [Step 4: Why register streaming features in Feast?](#step-4-why-register-streaming-features-in-feast)
+  - [Step 2: Inspect the data](#step-2-inspect-the-data)
+  - [Step 3: Inspect the `feature_store.yaml`](#step-3-inspect-the-feature_storeyaml)
+  - [Step 4: Spin up Kafka + Redis + Feast services](#step-4-spin-up-kafka--redis--feast-services)
+  - [Step 5: Why register streaming features in Feast?](#step-5-why-register-streaming-features-in-feast)
     - [Understanding the PushSource](#understanding-the-pushsource)
-  - [Step 5: Materialize batch features & ingest streaming features](#step-5-materialize-batch-features--ingest-streaming-features)
+  - [Step 6: Materialize batch features & ingest streaming features](#step-6-materialize-batch-features--ingest-streaming-features)
     - [Scheduling materialization](#scheduling-materialization)
     - [A note on Feast feature servers + push servers](#a-note-on-feast-feature-servers--push-servers)
 - [Conclusion](#conclusion)
@@ -32,7 +33,17 @@ First, we install Feast with Spark and Redis support:
 pip install "feast[spark,redis]"
 ```
 
-## Step 2: Inspect the `feature_store.yaml`
+## Step 2: Inspect the data
+We've changed the original `driver_stats.parquet` to include some new fields and aggregations. You can follow along in [explore_data.ipynb](explore_data.ipynb):
+
+```python
+import pandas as pd
+pd.read_parquet("feature_repo/data/driver_stats.parquet")
+```
+
+The key thing to note is that there are now a `miles_driven` field and a `daily_miles_driven` (which is a pre-computed aggregation). 
+
+## Step 3: Inspect the `feature_store.yaml`
 
 ```yaml
 project: feast_demo_local
@@ -65,7 +76,7 @@ offline_store:
 
 Because we use `redis-py` under the hood, this means Feast also works well with hosted Redis instances like AWS Elasticache ([docs](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/ElastiCache-Getting-Started-Tutorials-Connecting.html)). 
 
-## Step 3: Spin up Kafka + Redis + Feast services
+## Step 4: Spin up Kafka + Redis + Feast services
 
 We then use Docker Compose to spin up the services we need.
 - This leverages a script (in `kafka_demo/`) that creates a topic, reads from `feature_repo/data/driver_stats.parquet`, generates newer timestamps, and emits them to the topic.
@@ -101,7 +112,7 @@ Creating kafka_events         ... done
 Attaching to zookeeper, redis, broker, feast_push_server, feast_feature_server, kafka_events
 ...
 ```
-## Step 4: Why register streaming features in Feast?
+## Step 5: Why register streaming features in Feast?
 Relying on streaming features in Feast enables data scientists to increase freshness of the features they rely on, decreasing training / serving skew. 
 
 A data scientist may start out their feature engineering in their notebook by directly reading from the batch source (e.g. a table they join in a data warehouse). 
@@ -147,7 +158,7 @@ Using a `PushSource` alleviates this. The data scientist by using the `driver_da
 
 In the future, Feast will support the concept of a `StreamFeatureView` as well, which simplifies the life for the engineer further. This will directly ingest from a streaming source (e.g. Kafka) and apply transformations so an engineer doesn't need to scan for `PushSource`s and push data into Feast.
 
-## Step 5: Materialize batch features & ingest streaming features
+## Step 6: Materialize batch features & ingest streaming features
 
 We'll switch gears into a Jupyter notebook. This will guide you through:
 - Registering a `FeatureView` that has a single schema across both a batch source (`FileSource`) with aggregate features and a stream source (`PushSource`).

@@ -47,7 +47,7 @@ pip install "feast[aws]"
 ```
 
 # Exploring the data
-We've made some dummy data for this workshop in `infra/driver_stats.parquet`. Let's dive into what the data looks like. You can run the following in a Jupyter notebook in this directory:
+We've made some dummy data for this workshop in `infra/driver_stats.parquet`. Let's dive into what the data looks like. You can follow along in [explore_data.ipynb](explore_data.ipynb):
 
 ```python
 import pandas as pd

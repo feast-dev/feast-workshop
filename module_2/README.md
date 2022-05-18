@@ -30,7 +30,7 @@ pip install pygeohash
 ```
 
 ## Step 2: Look at the data we have
-We used `data/gen_lat_lon.py` to append randomly generated latitude and longitudes to the original driver stats dataset.
+We used `data/gen_lat_lon.py` to append randomly generated latitude and longitudes to the original driver stats dataset. Let's see what's in the data (you can follow along in [explore_data.ipynb](explore_data.ipynb))
 
 ```python
 import pandas as pd
