@@ -41,6 +41,8 @@ import pandas as pd
 pd.read_parquet("feature_repo/data/driver_stats.parquet")
 ```
 
+![](dataset.png)
+
 The key thing to note is that there are now a `miles_driven` field and a `daily_miles_driven` (which is a pre-computed aggregation). 
 
 ## Step 3: Inspect the `feature_store.yaml`
