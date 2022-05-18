@@ -19,6 +19,8 @@ In this module, we focus on building features for online serving, and keeping th
     - [Understanding the PushSource](#understanding-the-pushsource)
   - [Step 6: Materialize batch features & ingest streaming features](#step-6-materialize-batch-features--ingest-streaming-features)
     - [Scheduling materialization](#scheduling-materialization)
+      - [Airflow PythonOperator](#airflow-pythonoperator)
+      - [Airflow BashOperator](#airflow-bashoperator)
     - [A note on Feast feature servers + push servers](#a-note-on-feast-feature-servers--push-servers)
 - [Conclusion](#conclusion)
 - [FAQ](#faq)
@@ -175,10 +177,34 @@ Run the Jupyter notebook ([feature_repo/workshop.ipynb](feature_repo/module_1.ip
 ### Scheduling materialization
 To ensure fresh features, you'll want to schedule materialization jobs regularly. This can be as simple as having a cron job that calls `feast materialize-incremental`.
 
-Users may also be interested in integrating with Airflow, in which case you can build a custom Airflow image with the Feast SDK installed, and then use a `BashOperator`:
+Users may also be interested in integrating with Airflow, in which case you can build a custom Airflow image with the Feast SDK installed, and then use a `BashOperator` (with `feast materialize-incremental`) or `PythonOperator` (with `store.materialize_incremental(datetime.datetime.now())`):
+
+#### Airflow PythonOperator
 
 ```python
-materialize = BashOperator(
+# Define Python callable
+def materialize():
+  repo_config = RepoConfig(
+    registry=RegistryConfig(path="s3://[YOUR BUCKET]/registry.pb"),
+    project="feast_demo_aws",
+    provider="aws",
+    offline_store="file",
+    online_store=DynamoDBOnlineStoreConfig(region="us-west-2")
+  )
+  store = FeatureStore(config=repo_config)
+  store.materialize_incremental(datetime.datetime.now())
+
+# Use PythonOperator
+materialize_python = PythonOperator(
+    task_id='materialize_python',
+    python_callable=materialize,
+)
+```
+
+#### Airflow BashOperator
+```python
+# Use BashOperator
+materialize_bash = BashOperator(
     task_id='materialize',
     bash_command=f'feast materialize-incremental {datetime.datetime.now().replace(microsecond=0).isoformat()}',
 )

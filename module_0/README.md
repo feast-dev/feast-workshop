@@ -21,12 +21,12 @@ We focus on a specific example (that does not include online features or realtim
       - [Some further notes and gotchas](#some-further-notes-and-gotchas)
       - [Step 1b: Run `feast plan`](#step-1b-run-feast-plan)
       - [Step 1c: Run `feast apply`](#step-1c-run-feast-apply)
-    - [Step 2: Adding the feature repo to version control & set up CI/CD](#step-2-adding-the-feature-repo-to-version-control--set-up-cicd)
-      - [Step 2a: Automatically run `feast plan` for new pull requests](#step-2a-automatically-run-feast-plan-for-new-pull-requests)
-      - [Step 2b: Automatically run `feast apply` when pull requests are merged](#step-2b-automatically-run-feast-apply-when-pull-requests-are-merged)
-    - [Step 2c (optional): Access control for the registry](#step-2c-optional-access-control-for-the-registry)
-    - [Step 2d: Setup a Web UI endpoint](#step-2d-setup-a-web-ui-endpoint)
-    - [Step 2e: Merge a sample PR in your fork](#step-2e-merge-a-sample-pr-in-your-fork)
+      - [Step 1d: Verify features are registered](#step-1d-verify-features-are-registered)
+    - [Step 2: Setup a Web UI endpoint](#step-2-setup-a-web-ui-endpoint)
+    - [Step 3: Adding the feature repo to version control & set up CI/CD](#step-3-adding-the-feature-repo-to-version-control--set-up-cicd)
+      - [Step 3a: Automatically run `feast plan` for new pull requests](#step-3a-automatically-run-feast-plan-for-new-pull-requests)
+      - [Step 3b: Automatically run `feast apply` when pull requests are merged](#step-3b-automatically-run-feast-apply-when-pull-requests-are-merged)
+      - [Step 3c (optional): Access control for the registry](#step-3c-optional-access-control-for-the-registry)
     - [Other best practices](#other-best-practices)
   - [User group 2: ML Engineers](#user-group-2-ml-engineers)
     - [Step 0: Understanding `get_historical_features` and feature services](#step-0-understanding-get_historical_features-and-feature-services)
@@ -34,6 +34,9 @@ We focus on a specific example (that does not include online features or realtim
     - [Step 2: Fetch features for batch scoring (method 2)](#step-2-fetch-features-for-batch-scoring-method-2)
     - [Step 3 (optional): Scaling `get_historical_features` to large datasets](#step-3-optional-scaling-get_historical_features-to-large-datasets)
   - [User group 3: Data Scientists](#user-group-3-data-scientists)
+    - [What is the value for a data scientist?](#what-is-the-value-for-a-data-scientist)
+    - [How data scientists can use Feast](#how-data-scientists-can-use-feast)
+- [Exercise: merge a sample PR in your fork](#exercise-merge-a-sample-pr-in-your-fork)
 - [Conclusion](#conclusion)
 - [FAQ](#faq)
     - [How do I generate the entity dataframe?](#how-do-i-generate-the-entity-dataframe)
@@ -195,7 +198,6 @@ A quick explanation of what's happening in this `feature_store.yaml`:
           role: SNOWFLAKE_ROLE
           warehouse: SNOWFLAKE_WAREHOUSE
           database: SNOWFLAKE_DATABASE
-
       ```
 - **Offline store** 
   - We recommend users use data warehouses or Spark as their offline store for performant training dataset generation. 
@@ -254,7 +256,36 @@ Created feature service model_v2
 Deploying infrastructure for driver_hourly_stats
 ```
 
-### Step 2: Adding the feature repo to version control & set up CI/CD
+#### Step 1d: Verify features are registered
+You can now run Feast CLI commands to verify Feast knows about your features and data sources.
+
+```console
+$ feast feature-views list
+
+NAME                   ENTITIES    TYPE
+driver_hourly_stats    {'driver'}  FeatureView
+```
+
+### Step 2: Setup a Web UI endpoint
+Feast comes with an experimental Web UI. Users can already spin this up locally with `feast ui`, but you may want to have a Web UI that is universally available. Here, you'd likely deploy a service that runs `feast ui` on top of a `feature_store.yaml`, with some configuration on how frequently the UI should be refreshing its registry.
+
+**Note**: If you're using Windows, you may need to run `feast ui -h localhost` instead.
+
+```console
+$ feast ui
+
+INFO:     Started server process [10185]
+05/15/2022 04:35:58 PM INFO:Started server process [10185]
+INFO:     Waiting for application startup.
+05/15/2022 04:35:58 PM INFO:Waiting for application startup.
+INFO:     Application startup complete.
+05/15/2022 04:35:58 PM INFO:Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8888 (Press CTRL+C to quit)
+05/15/2022 04:35:58 PM INFO:Uvicorn running on http://0.0.0.0:8888 (Press CTRL+C to quit)
+```
+![Feast UI](sample_web_ui.png)
+
+### Step 3: Adding the feature repo to version control & set up CI/CD
 
 The feature repository is already created for you on GitHub.
 
@@ -264,7 +295,7 @@ We setup CI/CD to automatically manage the registry. You'll want e.g. a GitHub w
 - on pull request, runs `feast plan` 
 - on PR merge, runs `feast apply`.
 
-#### Step 2a: Automatically run `feast plan` for new pull requests
+#### Step 3a: Automatically run `feast plan` for new pull requests
 We recommend automatically running `feast plan` on incoming PRs to describe what changes will occur when the PR merges. 
 - This is useful for helping PR reviewers understand the effects of a change.
 - This can prevent breaking models in production (e.g. catching PRs that would change features used by an existing model version (`FeatureService)). 
@@ -326,7 +357,7 @@ See the result on a PR opened in this repo: https://github.com/feast-dev/feast-w
 
 <img src="feast_plan_CI.png" width=650 style="padding: 10px 0">
 
-#### Step 2b: Automatically run `feast apply` when pull requests are merged
+#### Step 3b: Automatically run `feast apply` when pull requests are merged
 When a pull request is merged to change the repo, we configure CI/CD to automatically run `feast apply`. 
 
 An example GitHub workflow which runs `feast apply` on PR merge (See [feast_apply.yml](../.github/workflows/feast_apply.yml), which is setup in this workshop repo)
@@ -369,41 +400,12 @@ jobs:
           feast apply
 ```
 
-### Step 2c (optional): Access control for the registry
+Towards the end of the module, we will see this in action, but for now, we focus on understanding what Feast brings to the table.
+
+#### Step 3c (optional): Access control for the registry
 We won't dive into this in detail here, but you don't want to allow arbitrary users to clone the feature repository, change definitions and run `feast apply`.
 
 Thus, you should lock down your registry (e.g. with an S3 bucket policy) to only allow changes from your CI/CD user and perhaps some ML engineers.
-
-### Step 2d: Setup a Web UI endpoint
-Feast comes with an experimental Web UI. Users can already spin this up locally with `feast ui`, but you may want to have a Web UI that is universally available. Here, you'd likely deploy a service that runs `feast ui` on top of a `feature_store.yaml`, with some configuration on how frequently the UI should be refreshing its registry.
-
-**Note**: If you're using Windows, you may need to run `feast ui -h localhost` instead.
-
-```console
-$ feast ui
-
-INFO:     Started server process [10185]
-05/15/2022 04:35:58 PM INFO:Started server process [10185]
-INFO:     Waiting for application startup.
-05/15/2022 04:35:58 PM INFO:Waiting for application startup.
-INFO:     Application startup complete.
-05/15/2022 04:35:58 PM INFO:Application startup complete.
-INFO:     Uvicorn running on http://0.0.0.0:8888 (Press CTRL+C to quit)
-05/15/2022 04:35:58 PM INFO:Uvicorn running on http://0.0.0.0:8888 (Press CTRL+C to quit)
-```
-![Feast UI](sample_web_ui.png)
-
-### Step 2e: Merge a sample PR in your fork
-In your own fork of the `feast-workshop` project, with the above setup (i.e. you've made GitHub secrets with your own `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`), try making a change with a pull request! And then merge that pull request to see the change propagate in the registry. 
-
-Some ideas for what to try:
-- Changing metadata (owner, description, tags) on an existing `FeatureView`
-- Adding or removing a new `Field` in an existing `FeatureView`
-
-You can verify the change propagated by:
-1. Running the Feast CLI (e.g. `feast feature-views list`)
-2. Checking in the Feast UI (i.e. via `feast ui`)
-3. Fetching features directly (either by referencing the feature directly in `get_historical_features` or by querying a modified `FeatureService`)
 
 ### Other best practices
 Many Feast users use `tags` on objects extensively. Some examples of how this may be used:
@@ -518,7 +520,16 @@ path = store.get_historical_features(
 ```
 
 ## User group 3: Data Scientists
-Data scientists will be using or authoring features in Feast. They can similarly generate in memory dataframes using `get_historical_features(...).to_df()` or larger datasets with methods like `get_historical_features(...).to_bigquery()` as described above.
+### What is the value for a data scientist?
+Data scientists will be using or authoring features in Feast. By using Feast, data scientist can:
+- Re-use existing features that are already productionized
+- Gain inspiration from other related models and the features they use
+- Organize model experiments using `FeatureService`s
+- (in upcoming modules) Directly author features or transformations that are used at serving time (instead of having MLE have to re-engineer)
+
+### How data scientists can use Feast
+
+They can similarly generate in memory dataframes using `get_historical_features(...).to_df()` or larger datasets with methods like `get_historical_features(...).to_bigquery()` as described above.
 
 We don't need to do anything new here since data scientists will be doing many of the same steps you've seen in previous user flows.
 
@@ -528,12 +539,25 @@ There are two ways data scientists can use Feast:
   - This is **not recommended** since data scientists cannot register feature services to indicate they depend on certain features in production. 
 - **[Recommended]** Have a local copy of the feature repository (e.g. `git clone`) and author / iterate / re-use features. 
   - Data scientist can:
-    1. iterate on features locally
-    2. apply features to their own dev project with a local registry & experiment
-    3. build feature services in preparation for production
-    4. submit PRs to include features that should be used in production (including A/B experiments, or model training iterations)
+    1. browse relevant features that are already productionized to re-use
+    2. iterate on new features locally
+    3. apply features to their own dev project with a local registry & experiment
+    4. build feature services in preparation for production
+    5. submit PRs to include features that should be used in production (including A/B experiments, or model training iterations)
 
 Data scientists can also investigate other models and their dependent features / data sources / on demand transformations through the repository or through the Web UI (by running `feast ui`)
+
+# Exercise: merge a sample PR in your fork
+In your own fork of the `feast-workshop` project, with the above setup (i.e. you've made GitHub secrets with your own `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`), try making a change with a pull request! And then merge that pull request to see the change propagate in the registry. 
+
+Some ideas for what to try:
+- Changing metadata (owner, description, tags) on an existing `FeatureView`
+- Adding or removing a new `Field` in an existing `FeatureView`
+
+You can verify the change propagated by:
+1. Running the Feast CLI (e.g. `feast feature-views list`)
+2. Checking in the Feast UI (i.e. via `feast ui`)
+3. Fetching features directly (either by referencing the feature directly in `get_historical_features` or by querying a modified `FeatureService`)
 
 # Conclusion
 As a result:
