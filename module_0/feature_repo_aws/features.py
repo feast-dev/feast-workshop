@@ -22,7 +22,7 @@ driver_hourly_stats_view = FeatureView(
 )
 
 driver_hourly_stats_view_2 = FeatureView(
-    name="driver_hourly_stats",
+    name="driver_hourly_stats_2",
     description="Hourly features from Danny",
     entities=["driver"],
     ttl=timedelta(seconds=8640000000),
