@@ -21,6 +21,7 @@ We focus on a specific example (that does not include online features or realtim
       - [Some further notes and gotchas](#some-further-notes-and-gotchas)
       - [Step 1b: Run `feast plan`](#step-1b-run-feast-plan)
       - [Step 1c: Run `feast apply`](#step-1c-run-feast-apply)
+      - [Step 1d: Verify features are registered](#step-1d-verify-features-are-registered)
     - [Step 2: Adding the feature repo to version control & set up CI/CD](#step-2-adding-the-feature-repo-to-version-control--set-up-cicd)
       - [Step 2a: Automatically run `feast plan` for new pull requests](#step-2a-automatically-run-feast-plan-for-new-pull-requests)
       - [Step 2b: Automatically run `feast apply` when pull requests are merged](#step-2b-automatically-run-feast-apply-when-pull-requests-are-merged)
@@ -195,7 +196,6 @@ A quick explanation of what's happening in this `feature_store.yaml`:
           role: SNOWFLAKE_ROLE
           warehouse: SNOWFLAKE_WAREHOUSE
           database: SNOWFLAKE_DATABASE
-
       ```
 - **Offline store** 
   - We recommend users use data warehouses or Spark as their offline store for performant training dataset generation. 
@@ -252,6 +252,16 @@ Created feature service model_v1
 Created feature service model_v2
 
 Deploying infrastructure for driver_hourly_stats
+```
+
+#### Step 1d: Verify features are registered
+You can now run Feast CLI commands (or sneak peak: run `feast ui`) to verify Feast knows about your features and data sources.
+
+```console
+$ feast feature-views list
+
+NAME                   ENTITIES    TYPE
+driver_hourly_stats    {'driver'}  FeatureView
 ```
 
 ### Step 2: Adding the feature repo to version control & set up CI/CD
