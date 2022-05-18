@@ -27,7 +27,6 @@ We focus on a specific example (that does not include online features or realtim
       - [Step 2b: Automatically run `feast apply` when pull requests are merged](#step-2b-automatically-run-feast-apply-when-pull-requests-are-merged)
     - [Step 2c (optional): Access control for the registry](#step-2c-optional-access-control-for-the-registry)
     - [Step 2d: Setup a Web UI endpoint](#step-2d-setup-a-web-ui-endpoint)
-    - [Step 2e: Merge a sample PR in your fork](#step-2e-merge-a-sample-pr-in-your-fork)
     - [Other best practices](#other-best-practices)
   - [User group 2: ML Engineers](#user-group-2-ml-engineers)
     - [Step 0: Understanding `get_historical_features` and feature services](#step-0-understanding-get_historical_features-and-feature-services)
@@ -35,6 +34,7 @@ We focus on a specific example (that does not include online features or realtim
     - [Step 2: Fetch features for batch scoring (method 2)](#step-2-fetch-features-for-batch-scoring-method-2)
     - [Step 3 (optional): Scaling `get_historical_features` to large datasets](#step-3-optional-scaling-get_historical_features-to-large-datasets)
   - [User group 3: Data Scientists](#user-group-3-data-scientists)
+- [Exercise: merge a sample PR in your fork](#exercise-merge-a-sample-pr-in-your-fork)
 - [Conclusion](#conclusion)
 - [FAQ](#faq)
     - [How do I generate the entity dataframe?](#how-do-i-generate-the-entity-dataframe)
@@ -379,6 +379,8 @@ jobs:
           feast apply
 ```
 
+Towards the end of the module, we will see this in action, but for now, we focus on understanding what Feast brings to the table.
+
 ### Step 2c (optional): Access control for the registry
 We won't dive into this in detail here, but you don't want to allow arbitrary users to clone the feature repository, change definitions and run `feast apply`.
 
@@ -402,18 +404,6 @@ INFO:     Uvicorn running on http://0.0.0.0:8888 (Press CTRL+C to quit)
 05/15/2022 04:35:58 PM INFO:Uvicorn running on http://0.0.0.0:8888 (Press CTRL+C to quit)
 ```
 ![Feast UI](sample_web_ui.png)
-
-### Step 2e: Merge a sample PR in your fork
-In your own fork of the `feast-workshop` project, with the above setup (i.e. you've made GitHub secrets with your own `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`), try making a change with a pull request! And then merge that pull request to see the change propagate in the registry. 
-
-Some ideas for what to try:
-- Changing metadata (owner, description, tags) on an existing `FeatureView`
-- Adding or removing a new `Field` in an existing `FeatureView`
-
-You can verify the change propagated by:
-1. Running the Feast CLI (e.g. `feast feature-views list`)
-2. Checking in the Feast UI (i.e. via `feast ui`)
-3. Fetching features directly (either by referencing the feature directly in `get_historical_features` or by querying a modified `FeatureService`)
 
 ### Other best practices
 Many Feast users use `tags` on objects extensively. Some examples of how this may be used:
@@ -544,6 +534,18 @@ There are two ways data scientists can use Feast:
     4. submit PRs to include features that should be used in production (including A/B experiments, or model training iterations)
 
 Data scientists can also investigate other models and their dependent features / data sources / on demand transformations through the repository or through the Web UI (by running `feast ui`)
+
+# Exercise: merge a sample PR in your fork
+In your own fork of the `feast-workshop` project, with the above setup (i.e. you've made GitHub secrets with your own `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`), try making a change with a pull request! And then merge that pull request to see the change propagate in the registry. 
+
+Some ideas for what to try:
+- Changing metadata (owner, description, tags) on an existing `FeatureView`
+- Adding or removing a new `Field` in an existing `FeatureView`
+
+You can verify the change propagated by:
+1. Running the Feast CLI (e.g. `feast feature-views list`)
+2. Checking in the Feast UI (i.e. via `feast ui`)
+3. Fetching features directly (either by referencing the feature directly in `get_historical_features` or by querying a modified `FeatureService`)
 
 # Conclusion
 As a result:
