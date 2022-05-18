@@ -34,6 +34,8 @@ We focus on a specific example (that does not include online features or realtim
     - [Step 2: Fetch features for batch scoring (method 2)](#step-2-fetch-features-for-batch-scoring-method-2)
     - [Step 3 (optional): Scaling `get_historical_features` to large datasets](#step-3-optional-scaling-get_historical_features-to-large-datasets)
   - [User group 3: Data Scientists](#user-group-3-data-scientists)
+    - [What is the value for a data scientist?](#what-is-the-value-for-a-data-scientist)
+    - [How data scientists can use Feast](#how-data-scientists-can-use-feast)
 - [Exercise: merge a sample PR in your fork](#exercise-merge-a-sample-pr-in-your-fork)
 - [Conclusion](#conclusion)
 - [FAQ](#faq)
@@ -518,11 +520,14 @@ path = store.get_historical_features(
 ```
 
 ## User group 3: Data Scientists
+### What is the value for a data scientist?
 Data scientists will be using or authoring features in Feast. By using Feast, data scientist can:
 - Re-use existing features that are already productionized
 - Gain inspiration from other related models and the features they use
 - Organize model experiments using `FeatureService`s
 - (in upcoming modules) Directly author features or transformations that are used at serving time (instead of having MLE have to re-engineer)
+
+### How data scientists can use Feast
 
 They can similarly generate in memory dataframes using `get_historical_features(...).to_df()` or larger datasets with methods like `get_historical_features(...).to_bigquery()` as described above.
 
