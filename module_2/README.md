@@ -12,6 +12,7 @@ On a high level, the flow of data will look like
   - [Step 1: Install Feast](#step-1-install-feast)
   - [Step 2: Look at the data we have](#step-2-look-at-the-data-we-have)
   - [Step 3: Understanding on demand feature views and request data](#step-3-understanding-on-demand-feature-views-and-request-data)
+    - [Why would a data scientist want to use `OnDemandFeatureView`?](#why-would-a-data-scientist-want-to-use-ondemandfeatureview)
   - [Step 4: Apply features](#step-4-apply-features)
   - [Step 5: Materialize batch features](#step-5-materialize-batch-features)
   - [Step 6 (optional): Explore the repository in the Web UI](#step-6-optional-explore-the-repository-in-the-web-ui)
@@ -75,7 +76,7 @@ This is obviously not a particularly useful transformation, but is helpful for e
     - Because a source feature view can have a `PushSource`, this means we can also apply a consistent last-mile transformation on both batch and streaming features.
   - Note that the above has a single `inputs` Pandas dataframe as input. This joins together all the sources for the `OnDemandFeatureView`
 
-**Why would a data scientist want to use `OnDemandFeatureView`?**
+### Why would a data scientist want to use `OnDemandFeatureView`?
 
 Recall that in the previous module, we saw that using `PushSource` is valuable for ensuring consistent access to fresher feature values (at serving time) by integrating with streaming sources. The rationale is similar here:
 - Without `OnDemandFeatureView`s, data scientists will join batch sources and transform on that data directly. At serving time, the ML engineer now needs to think about each feature is pre-computed or whether it needs to be computed on the fly due to dependencies on request data. This will increase the time to production for the model.
@@ -84,8 +85,6 @@ Recall that in the previous module, we saw that using `PushSource` is valuable f
 Zooming back out, we can see what complexity Feast abstracts away from data scientists and engineers. 
 
 ![](odfv_arch.png)
-
-**Note:** There is an open issue for supporting Python based on demand transforms (without Pandas). Benchmarks have indicated this could result in significantly faster online performance. See [#2261](https://github.com/feast-dev/feast/issues/2261) for details.
 
 ## Step 4: Apply features
 ```console
@@ -135,6 +134,8 @@ For example, you can see the `model_v3` feature service and its resulting featur
 Now we'll see how these transformations are executed offline at `get_historical_features` and online at `get_online_features` time. We'll also see how `OnDemandFeatureView` interacts with request data, regular feature views, and streaming / push features.
 
 Try out the Jupyter notebook in [client/module_2_client.ipynb](client/module_2_client.ipynb). This is in a separate directory that contains just a `feature_store.yaml`.
+
+**Note:** There is an open issue for supporting Python based on demand transforms (without Pandas). Benchmarks have indicated this could result in significantly faster online performance. See [#2261](https://github.com/feast-dev/feast/issues/2261) for details.
 
 ### Importing a library in the transformation
 If you use a library that's imported, the client will need to have this library imported. This is the case here (we rely on `pygeohash`):
