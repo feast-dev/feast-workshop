@@ -21,5 +21,5 @@ driver_hourly_stats_view = FeatureView(
     online=True,
     source=driver_stats,
     tags={"production": "True"},
-    owner="test2@gmail.com",
+    owner="siddhantmahalle@outlook.com",
 )
