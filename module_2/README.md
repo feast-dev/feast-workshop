@@ -105,6 +105,8 @@ You can see explore how different Feast objects relate to each other in the UI.
 feast ui
 ```
 
+**Note**: If you're using Windows, you may need to run `feast ui -h localhost` instead.
+
 For example, you can see the `model_v3` feature service and its resulting features..
 ![](sample_ui_fs.png)
 

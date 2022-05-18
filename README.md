@@ -21,6 +21,7 @@ Feast solves several common challenges teams face:
 This workshop assumes you have the following installed:
 - A local development environment that supports running Jupyter notebooks (e.g. VSCode with Jupyter plugin)
 - Python 3.7+
+- Java 11 (for Spark, e.g. `brew install java11`)
 - pip
 - Docker & Docker Compose (e.g. `brew install docker docker-compose`)
 - Terraform ([docs](https://learn.hashicorp.com/tutorials/terraform/install-cli#install-terraform))
@@ -30,7 +31,7 @@ Since we'll be learning how to leverage Feast in CI/CD, you'll also need to fork
 
 **Caveats** 
 - M1 Macbook development is untested with this flow. See also [How to run / develop for Feast on M1 Macs](https://github.com/feast-dev/feast/issues/2105).
-- Windows development is untested with this flow.
+- Windows development has only been tested with WSL. You will need to follow this [guide](https://docs.docker.com/desktop/windows/wsl/) to have Docker play nicely.
 
 ## Modules
 *See also: [Feast quickstart](https://docs.feast.dev/getting-started/quickstart), [Feast x Great Expectations tutorial](https://docs.feast.dev/tutorials/validating-historical-features)*

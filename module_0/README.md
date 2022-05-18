@@ -377,6 +377,8 @@ Thus, you should lock down your registry (e.g. with an S3 bucket policy) to only
 ### Step 2d (optional): Setup a Web UI endpoint
 Feast comes with an experimental Web UI. Users can already spin this up locally with `feast ui`, but you may want to have a Web UI that is universally available. Here, you'd likely deploy a service that runs `feast ui` on top of a `feature_store.yaml`, with some configuration on how frequently the UI should be refreshing its registry.
 
+**Note**: If you're using Windows, you may need to run `feast ui -h localhost` instead.
+
 ```console
 $ feast ui
 

@@ -85,6 +85,7 @@ We then use Docker Compose to spin up the services we need.
     ```
 
 Start up the Docker daemon and then use Docker Compose to spin up the services as described above:
+- You may need to run `sudo docker-compose up` if you run into a Docker permission denied error
 ```console
 $ docker-compose up
 
