@@ -518,7 +518,13 @@ path = store.get_historical_features(
 ```
 
 ## User group 3: Data Scientists
-Data scientists will be using or authoring features in Feast. They can similarly generate in memory dataframes using `get_historical_features(...).to_df()` or larger datasets with methods like `get_historical_features(...).to_bigquery()` as described above.
+Data scientists will be using or authoring features in Feast. By using Feast, data scientist can:
+- Re-use existing features that are already productionized
+- Gain inspiration from other related models and the features they use
+- Organize model experiments using `FeatureService`s
+- (in upcoming modules) Directly author features or transformations that are used at serving time (instead of having MLE have to re-engineer)
+
+They can similarly generate in memory dataframes using `get_historical_features(...).to_df()` or larger datasets with methods like `get_historical_features(...).to_bigquery()` as described above.
 
 We don't need to do anything new here since data scientists will be doing many of the same steps you've seen in previous user flows.
 
@@ -528,10 +534,11 @@ There are two ways data scientists can use Feast:
   - This is **not recommended** since data scientists cannot register feature services to indicate they depend on certain features in production. 
 - **[Recommended]** Have a local copy of the feature repository (e.g. `git clone`) and author / iterate / re-use features. 
   - Data scientist can:
-    1. iterate on features locally
-    2. apply features to their own dev project with a local registry & experiment
-    3. build feature services in preparation for production
-    4. submit PRs to include features that should be used in production (including A/B experiments, or model training iterations)
+    1. browse relevant features that are already productionized to re-use
+    2. iterate on new features locally
+    3. apply features to their own dev project with a local registry & experiment
+    4. build feature services in preparation for production
+    5. submit PRs to include features that should be used in production (including A/B experiments, or model training iterations)
 
 Data scientists can also investigate other models and their dependent features / data sources / on demand transformations through the repository or through the Web UI (by running `feast ui`)
 
