@@ -22,11 +22,11 @@ We focus on a specific example (that does not include online features or realtim
       - [Step 1b: Run `feast plan`](#step-1b-run-feast-plan)
       - [Step 1c: Run `feast apply`](#step-1c-run-feast-apply)
       - [Step 1d: Verify features are registered](#step-1d-verify-features-are-registered)
-    - [Step 2: Adding the feature repo to version control & set up CI/CD](#step-2-adding-the-feature-repo-to-version-control--set-up-cicd)
-      - [Step 2a: Automatically run `feast plan` for new pull requests](#step-2a-automatically-run-feast-plan-for-new-pull-requests)
-      - [Step 2b: Automatically run `feast apply` when pull requests are merged](#step-2b-automatically-run-feast-apply-when-pull-requests-are-merged)
-    - [Step 2c (optional): Access control for the registry](#step-2c-optional-access-control-for-the-registry)
-    - [Step 2d: Setup a Web UI endpoint](#step-2d-setup-a-web-ui-endpoint)
+    - [Step 2: Setup a Web UI endpoint](#step-2-setup-a-web-ui-endpoint)
+    - [Step 3: Adding the feature repo to version control & set up CI/CD](#step-3-adding-the-feature-repo-to-version-control--set-up-cicd)
+      - [Step 3a: Automatically run `feast plan` for new pull requests](#step-3a-automatically-run-feast-plan-for-new-pull-requests)
+      - [Step 3b: Automatically run `feast apply` when pull requests are merged](#step-3b-automatically-run-feast-apply-when-pull-requests-are-merged)
+      - [Step 3c (optional): Access control for the registry](#step-3c-optional-access-control-for-the-registry)
     - [Other best practices](#other-best-practices)
   - [User group 2: ML Engineers](#user-group-2-ml-engineers)
     - [Step 0: Understanding `get_historical_features` and feature services](#step-0-understanding-get_historical_features-and-feature-services)
@@ -255,7 +255,7 @@ Deploying infrastructure for driver_hourly_stats
 ```
 
 #### Step 1d: Verify features are registered
-You can now run Feast CLI commands (or sneak peak: run `feast ui`) to verify Feast knows about your features and data sources.
+You can now run Feast CLI commands to verify Feast knows about your features and data sources.
 
 ```console
 $ feast feature-views list
@@ -264,7 +264,26 @@ NAME                   ENTITIES    TYPE
 driver_hourly_stats    {'driver'}  FeatureView
 ```
 
-### Step 2: Adding the feature repo to version control & set up CI/CD
+### Step 2: Setup a Web UI endpoint
+Feast comes with an experimental Web UI. Users can already spin this up locally with `feast ui`, but you may want to have a Web UI that is universally available. Here, you'd likely deploy a service that runs `feast ui` on top of a `feature_store.yaml`, with some configuration on how frequently the UI should be refreshing its registry.
+
+**Note**: If you're using Windows, you may need to run `feast ui -h localhost` instead.
+
+```console
+$ feast ui
+
+INFO:     Started server process [10185]
+05/15/2022 04:35:58 PM INFO:Started server process [10185]
+INFO:     Waiting for application startup.
+05/15/2022 04:35:58 PM INFO:Waiting for application startup.
+INFO:     Application startup complete.
+05/15/2022 04:35:58 PM INFO:Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8888 (Press CTRL+C to quit)
+05/15/2022 04:35:58 PM INFO:Uvicorn running on http://0.0.0.0:8888 (Press CTRL+C to quit)
+```
+![Feast UI](sample_web_ui.png)
+
+### Step 3: Adding the feature repo to version control & set up CI/CD
 
 The feature repository is already created for you on GitHub.
 
@@ -274,7 +293,7 @@ We setup CI/CD to automatically manage the registry. You'll want e.g. a GitHub w
 - on pull request, runs `feast plan` 
 - on PR merge, runs `feast apply`.
 
-#### Step 2a: Automatically run `feast plan` for new pull requests
+#### Step 3a: Automatically run `feast plan` for new pull requests
 We recommend automatically running `feast plan` on incoming PRs to describe what changes will occur when the PR merges. 
 - This is useful for helping PR reviewers understand the effects of a change.
 - This can prevent breaking models in production (e.g. catching PRs that would change features used by an existing model version (`FeatureService)). 
@@ -336,7 +355,7 @@ See the result on a PR opened in this repo: https://github.com/feast-dev/feast-w
 
 <img src="feast_plan_CI.png" width=650 style="padding: 10px 0">
 
-#### Step 2b: Automatically run `feast apply` when pull requests are merged
+#### Step 3b: Automatically run `feast apply` when pull requests are merged
 When a pull request is merged to change the repo, we configure CI/CD to automatically run `feast apply`. 
 
 An example GitHub workflow which runs `feast apply` on PR merge (See [feast_apply.yml](../.github/workflows/feast_apply.yml), which is setup in this workshop repo)
@@ -381,29 +400,10 @@ jobs:
 
 Towards the end of the module, we will see this in action, but for now, we focus on understanding what Feast brings to the table.
 
-### Step 2c (optional): Access control for the registry
+#### Step 3c (optional): Access control for the registry
 We won't dive into this in detail here, but you don't want to allow arbitrary users to clone the feature repository, change definitions and run `feast apply`.
 
 Thus, you should lock down your registry (e.g. with an S3 bucket policy) to only allow changes from your CI/CD user and perhaps some ML engineers.
-
-### Step 2d: Setup a Web UI endpoint
-Feast comes with an experimental Web UI. Users can already spin this up locally with `feast ui`, but you may want to have a Web UI that is universally available. Here, you'd likely deploy a service that runs `feast ui` on top of a `feature_store.yaml`, with some configuration on how frequently the UI should be refreshing its registry.
-
-**Note**: If you're using Windows, you may need to run `feast ui -h localhost` instead.
-
-```console
-$ feast ui
-
-INFO:     Started server process [10185]
-05/15/2022 04:35:58 PM INFO:Started server process [10185]
-INFO:     Waiting for application startup.
-05/15/2022 04:35:58 PM INFO:Waiting for application startup.
-INFO:     Application startup complete.
-05/15/2022 04:35:58 PM INFO:Application startup complete.
-INFO:     Uvicorn running on http://0.0.0.0:8888 (Press CTRL+C to quit)
-05/15/2022 04:35:58 PM INFO:Uvicorn running on http://0.0.0.0:8888 (Press CTRL+C to quit)
-```
-![Feast UI](sample_web_ui.png)
 
 ### Other best practices
 Many Feast users use `tags` on objects extensively. Some examples of how this may be used:
