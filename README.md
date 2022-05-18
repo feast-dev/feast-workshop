@@ -25,7 +25,8 @@ This workshop assumes you have the following installed:
 - pip
 - Docker & Docker Compose (e.g. `brew install docker docker-compose`)
 - Terraform ([docs](https://learn.hashicorp.com/tutorials/terraform/install-cli#install-terraform))
-- An AWS account setup with credentials(e.g see [AWS credentials quickstart](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html#cli-configure-quickstart-creds))
+- AWS CLI
+- An AWS account setup with credentials via `aws configure` (e.g see [AWS credentials quickstart](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html#cli-configure-quickstart-creds))
 
 Since we'll be learning how to leverage Feast in CI/CD, you'll also need to fork this workshop repository.
 

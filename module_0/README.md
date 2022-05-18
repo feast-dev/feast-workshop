@@ -25,8 +25,8 @@ We focus on a specific example (that does not include online features or realtim
       - [Step 2a: Automatically run `feast plan` for new pull requests](#step-2a-automatically-run-feast-plan-for-new-pull-requests)
       - [Step 2b: Automatically run `feast apply` when pull requests are merged](#step-2b-automatically-run-feast-apply-when-pull-requests-are-merged)
     - [Step 2c (optional): Access control for the registry](#step-2c-optional-access-control-for-the-registry)
-    - [Step 2d (optional): Setup a Web UI endpoint](#step-2d-optional-setup-a-web-ui-endpoint)
-    - [Step 2e (optional): Merge a sample PR in your fork](#step-2e-optional-merge-a-sample-pr-in-your-fork)
+    - [Step 2d: Setup a Web UI endpoint](#step-2d-setup-a-web-ui-endpoint)
+    - [Step 2e: Merge a sample PR in your fork](#step-2e-merge-a-sample-pr-in-your-fork)
     - [Other best practices](#other-best-practices)
   - [User group 2: ML Engineers](#user-group-2-ml-engineers)
     - [Step 0: Understanding `get_historical_features` and feature services](#step-0-understanding-get_historical_features-and-feature-services)
@@ -47,7 +47,7 @@ pip install "feast[aws]"
 ```
 
 # Exploring the data
-We've made some dummy data for this workshop in `infra/driver_stats.parquet`. Let's dive into what the data looks like:
+We've made some dummy data for this workshop in `infra/driver_stats.parquet`. Let's dive into what the data looks like. You can run the following in a Jupyter notebook in this directory:
 
 ```python
 import pandas as pd
@@ -106,15 +106,7 @@ The team here sets up the centralized Feast feature repository and CI/CD in GitH
 
 ### Step 0: Setup S3 bucket for registry and file sources
 This assumes you have an AWS account & Terraform setup. If you don't:
-- Set up an AWS account & setup your credentials as per the [AWS quickstart](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html#cli-configure-quickstart-creds)
-  - You could skip installing the AWS CLI by modifying `infra/main.tf` to have:
-    ```HCL
-    provider "aws" {
-      region = "us-west-2"
-      access_key = "my-access-key"
-      secret_key = "my-secret-key"
-    }
-    ```
+- Set up an AWS account, install the AWS CLI, and setup your credentials with `aws configure` as per the [AWS credential quickstart](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html#cli-configure-quickstart-creds)
 - Install [Terraform](https://learn.hashicorp.com/tutorials/terraform/install-cli#install-terraform)
 
 We've made a simple Terraform project to help with S3 bucket creation (and uploading the test data we need):
@@ -331,6 +323,7 @@ jobs:
 You'll notice the above logic reference two secrets in GitHub corresponding to your AWS credentials. To make this workflow work, create GitHub secrets with your own `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`
 
 See the result on a PR opened in this repo: https://github.com/feast-dev/feast-workshop/pull/3
+
 <img src="feast_plan_CI.png" width=650 style="padding: 10px 0">
 
 #### Step 2b: Automatically run `feast apply` when pull requests are merged
@@ -381,7 +374,7 @@ We won't dive into this in detail here, but you don't want to allow arbitrary us
 
 Thus, you should lock down your registry (e.g. with an S3 bucket policy) to only allow changes from your CI/CD user and perhaps some ML engineers.
 
-### Step 2d (optional): Setup a Web UI endpoint
+### Step 2d: Setup a Web UI endpoint
 Feast comes with an experimental Web UI. Users can already spin this up locally with `feast ui`, but you may want to have a Web UI that is universally available. Here, you'd likely deploy a service that runs `feast ui` on top of a `feature_store.yaml`, with some configuration on how frequently the UI should be refreshing its registry.
 
 **Note**: If you're using Windows, you may need to run `feast ui -h localhost` instead.
@@ -400,8 +393,12 @@ INFO:     Uvicorn running on http://0.0.0.0:8888 (Press CTRL+C to quit)
 ```
 ![Feast UI](sample_web_ui.png)
 
-### Step 2e (optional): Merge a sample PR in your fork
-In your own fork of the `feast-workshop` project, with the above all setup, try making a change with a pull request! And then merge that pull request to see the change propagate in the registry.
+### Step 2e: Merge a sample PR in your fork
+In your own fork of the `feast-workshop` project, with the above setup (i.e. you've made GitHub secrets with your own `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`), try making a change with a pull request! And then merge that pull request to see the change propagate in the registry. 
+
+Some ideas for what to try:
+- Changing metadata (owner, description, tags) on an existing `FeatureView`
+- Adding or removing a new `Field` in an existing `FeatureView`
 
 You can verify the change propagated by:
 1. Running the Feast CLI (e.g. `feast feature-views list`)
@@ -438,7 +435,7 @@ Data scientists or ML engineers can use the defined `FeatureService` (correspond
 
 `get_historical_features` is an API by which you can retrieve features (by referencing features directly or via feature services). It will under the hood manage point-in-time joins and avoid data leakage to generate training datasets or power batch scoring.
 
-For batch scoring, you want to get the latest feature values for your entities. Feast requires timestamps in `get_historical_features`, so what you'll need to do is append an event timestamp of `now()`. e.g.
+For batch scoring, you want to get the latest feature values for your entities. Feast requires timestamps in `get_historical_features`, so what you'll need to do is append an event timestamp of `now()`. Don't bother running this code right now since we'll run this in the next step.
 
 ```python
 # Get the latest feature values for unique entities
@@ -454,7 +451,7 @@ predictions = model.predict(training_df)
 
 Note that we're using a `FeatureService` in this example. 
 
-A feature service is the recommended way to version a model's feature dependencies. This is useful for many reasons:
+A **feature service** is the recommended way to version a model's feature dependencies. This is useful for many reasons:
 - Data scientists can easily recall what features were used for a given model iteration, or learn what features were useful for a related model
 - Engineers can use that same feature service to retrieve features at serving time, or run A/B experiments across several feature services.
 - Data lineage. Feature services give visibility into what features are depended on in production. Thus, we can prevent accidental changes
@@ -480,6 +477,9 @@ You can also not have a `feature_store.yaml` and directly instantiate a `RepoCon
 
 A quick snippet of the code:
 ```python
+from feast import FeatureStore, RepoConfig
+from feast.repo_config import RegistryConfig
+
 repo_config = RepoConfig(
     registry=RegistryConfig(path="s3://[YOUR BUCKET]/registry.pb"),
     project="feast_demo_aws",
