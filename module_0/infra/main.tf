@@ -1,5 +1,5 @@
 provider "aws" {
-  region = "us-west-2"
+  region = "eu-west-3"
 }
 
 resource "aws_s3_bucket" "feast_bucket" {
