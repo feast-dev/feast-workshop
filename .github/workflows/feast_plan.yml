@@ -29,6 +29,7 @@ jobs:
           FEAST_USAGE: "False"
           FEAST_FORCE_USAGE_UUID: None
           IS_TEST: "True"
+          TERM: "xterm-color"
         run: |
           body=$(cd module_0/feature_repo_aws; feast plan)
           body="${body//'%'/'%25'}"
