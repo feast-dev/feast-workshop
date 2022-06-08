@@ -12,6 +12,7 @@ On a high level, the flow of data will look like
   - [Step 1: Install Feast](#step-1-install-feast)
   - [Step 2: Look at the data we have](#step-2-look-at-the-data-we-have)
   - [Step 3: Understanding on demand feature views and request data](#step-3-understanding-on-demand-feature-views-and-request-data)
+    - [What is the difference between a `StreamFeatureView` and an `OnDemandFeatureView`?](#what-is-the-difference-between-a-streamfeatureview-and-an-ondemandfeatureview)
     - [Why would a data scientist want to use `OnDemandFeatureView`?](#why-would-a-data-scientist-want-to-use-ondemandfeatureview)
   - [Step 4: Apply features](#step-4-apply-features)
   - [Step 5: Materialize batch features](#step-5-materialize-batch-features)
@@ -75,6 +76,15 @@ This is obviously not a particularly useful transformation, but is helpful for e
   - applies a transformation on top of those sources (batch, streaming, or request).
     - Because a source feature view can have a `PushSource`, this means we can also apply a consistent last-mile transformation on both batch and streaming features.
   - Note that the above has a single `inputs` Pandas dataframe as input. This joins together all the sources for the `OnDemandFeatureView`
+
+### What is the difference between a `StreamFeatureView` and an `OnDemandFeatureView`?
+As mentioned in the previous module, in the upcoming release there will be the ability to register streaming transformations within Feast.
+
+The difference between an on demand transformation and a streaming transformation lies in how the intermediate data is stored and processed. In the example we look at below, we leverage driver locations to generate features:
+- If you push your location data to a Kafka topic for other uses, then you only need a `StreamFeatureView` to use that data in a transformation. The feature values here are generated asynchronously.
+- Otherwise, if you have an incoming user request and you want to synchronously generate features, you would use an `OnDemandFeatureView` to allow transforming that location data (potentially with other precomputed or pushed features)
+
+Usually, users will use `OnDemandFeatureView` for last mile transformations that need to be executed in either batch or streaming pipelines, or need to synchronously generate feature values based on request data.
 
 ### Why would a data scientist want to use `OnDemandFeatureView`?
 

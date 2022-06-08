@@ -162,7 +162,7 @@ driver_daily_features_view = FeatureView(
 
 Using a `PushSource` alleviates this. The data scientist by using the `driver_daily_features` feature view that at serving time, the model will have access to as fresh of a value as possible. Engineers now just need to make sure that any registered `PushSource`s have feature values being regularly pushed to make the feature consistently available.
 
-In the future, Feast will support the concept of a `StreamFeatureView` as well, which simplifies the life for the engineer further. This will directly ingest from a streaming source (e.g. Kafka) and apply transformations so an engineer doesn't need to scan for `PushSource`s and push data into Feast.
+In the upcoming release, Feast will support the concept of a `StreamFeatureView` as well, which simplifies the life for the engineer further. This will allow common configuration of streaming sources (e.g. Kafka) and apply transformations (defined by data scientists) so an engineer doesn't need to scan for `PushSource`s and push data into Feast.
 
 ## Step 6: Materialize batch features & ingest streaming features
 
