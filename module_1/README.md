@@ -24,6 +24,8 @@ In this module, we focus on building features for online serving, and keeping th
     - [A note on Feast feature servers + push servers](#a-note-on-feast-feature-servers--push-servers)
 - [Conclusion](#conclusion)
 - [FAQ](#faq)
+    - [How do you synchronize materialized features with pushed features from streaming?](#how-do-you-synchronize-materialized-features-with-pushed-features-from-streaming)
+    - [Does Feast allow pushing features to the offline store?](#does-feast-allow-pushing-features-to-the-offline-store)
     - [Can feature / push servers refresh their registry in response to an event? e.g. after a PR merges and `feast apply` is run?](#can-feature--push-servers-refresh-their-registry-in-response-to-an-event-eg-after-a-pr-merges-and-feast-apply-is-run)
     - [How do I speed up or scale up materialization?](#how-do-i-speed-up-or-scale-up-materialization)
 
@@ -244,6 +246,20 @@ By the end of this module, you will have learned how to build streaming features
 - serve features (e.g. through `feature_store.get_online_features` or through feature servers)
 
 # FAQ
+
+### How do you synchronize materialized features with pushed features from streaming?
+This relies on individual online store implementations. The existing Redis online store implementation for example will check timestamps of incoming events and prefer the latest version.
+
+Doing this event timestamp checking is expensive though and slows down writes. In many cases, this is not preferred. Databases often support storing multiple versions of the same value, so you can leverage that (+ TTLs) to query the most recent version at read time.
+
+### Does Feast allow pushing features to the offline store?
+Not yet! See more details at https://github.com/feast-dev/feast/issues/2732
+
+Many users have asked for this functionality as a quick way to get started, but often users work with two flows:
+- To power the online store, using stream processing to generate fresh features and pushing to the online store
+- To power the offline store, using some ETL / ELT pipelines that process and clean the raw data.
+
+Though this is more complex, one key advantage of this is that you can construct new features based on the data while iterating on model training. If you rely on streaming features to generate historical feature values, then you need to rely on a log-and-wait approach, which can slow down model iteration.
 
 ### Can feature / push servers refresh their registry in response to an event? e.g. after a PR merges and `feast apply` is run?
 Unfortunately, currently the servers don't support this. Feel free to contribute a PR though to enable this! The tricky part here is that Feast would need to keep track of these servers in the registry (or in some other way), which is not the way Feast is currently designed.
