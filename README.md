@@ -21,12 +21,19 @@ Feast solves several common challenges teams face:
 This workshop assumes you have the following installed:
 - A local development environment that supports running Jupyter notebooks (e.g. VSCode with Jupyter plugin)
 - Python 3.7+
-- Java 11 (for Spark, e.g. `brew install java11`)
 - pip
-- Docker & Docker Compose (e.g. `brew install docker docker-compose`)
-- Terraform ([docs](https://learn.hashicorp.com/tutorials/terraform/install-cli#install-terraform))
-- AWS CLI
-- An AWS account setup with credentials via `aws configure` (e.g see [AWS credentials quickstart](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html#cli-configure-quickstart-creds))
+  - Docker & Docker Compose (e.g. `brew install docker docker-compose`)
+- **Module 0 pre-requisites**:
+  - Terraform ([docs](https://learn.hashicorp.com/tutorials/terraform/install-cli#install-terraform))
+  - Either AWS or GCP setup:
+    - AWS
+      - AWS CLI
+      - An AWS account setup with credentials via `aws configure` (e.g see [AWS credentials quickstart](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html#cli-configure-quickstart-creds))
+    - GCP
+      - GCP account
+      - `gcloud` CLI
+- **Module 1 pre-requisites**:
+  - Java 11 (for Spark, e.g. `brew install java11`)
 
 Since we'll be learning how to leverage Feast in CI/CD, you'll also need to fork this workshop repository.
 

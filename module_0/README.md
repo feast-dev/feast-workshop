@@ -110,7 +110,7 @@ It's worth noting that there are multiple types of feature views. `OnDemandFeatu
 There are three user groups here worth considering. The ML platform team, the ML engineers running batch inference on models, and the data scientists building models. 
 
 ## User group 1: ML Platform Team
-The team here sets up the centralized Feast feature repository and CI/CD in GitHub. This is what's seen in `feature_repo_aws/`.
+The team here sets up the centralized Feast feature repository and CI/CD in GitHub. This is what's seen in `feature_repo_aws/` or `feature_repo_gcp/`.
 
 ### Step 0 (AWS): Setup S3 bucket for registry and file sources
 This assumes you have an AWS account & Terraform setup. If you don't:
@@ -639,7 +639,7 @@ We don't need to do anything new here since data scientists will be doing many o
 
 There are two ways data scientists can use Feast:
 - Use Feast primarily as a way of pulling production ready features. 
-  - See the `client_aws/` or `client_no_yaml` folders for examples of how users can pull features by only having a `feature_store.yaml` or instantiating a `RepoConfig` object
+  - See the `client_aws/`/`client_gcp/`, or `client_no_yaml` folders for examples of how users can pull features by only having a `feature_store.yaml` or instantiating a `RepoConfig` object
   - This is **not recommended** since data scientists cannot register feature services to indicate they depend on certain features in production. 
 - **[Recommended]** Have a local copy of the feature repository (e.g. `git clone`) and author / iterate / re-use features. 
   - Data scientist can:
