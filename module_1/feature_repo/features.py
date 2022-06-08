@@ -28,10 +28,9 @@ driver_hourly_stats_view = FeatureView(
     schema=[
         Field(name="conv_rate", dtype=Float32),
         Field(name="acc_rate", dtype=Float32),
-        Field(name="miles_driven", dtype=Float32),
     ],
     online=True,
     source=driver_stats,
-    tags={"production": "True"},
+    tags={"production": "False"},
     owner="test2@gmail.com",
 )
