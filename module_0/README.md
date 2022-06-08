@@ -15,9 +15,10 @@ We focus on a specific example (that does not include online features or realtim
   - [A quick primer on feature views](#a-quick-primer-on-feature-views)
 - [User groups](#user-groups)
   - [User group 1: ML Platform Team](#user-group-1-ml-platform-team)
-    - [Step 0: Setup S3 bucket for registry and file sources](#step-0-setup-s3-bucket-for-registry-and-file-sources)
+    - [Step 0 (AWS): Setup S3 bucket for registry and file sources](#step-0-aws-setup-s3-bucket-for-registry-and-file-sources)
+    - [Step 0 (GCP): Setup GCS bucket for registry and file sources](#step-0-gcp-setup-gcs-bucket-for-registry-and-file-sources)
     - [Step 1: Setup the feature repo](#step-1-setup-the-feature-repo)
-      - [Step 1a: Use your configured S3 bucket](#step-1a-use-your-configured-s3-bucket)
+      - [Step 1a: Use your configured bucket](#step-1a-use-your-configured-bucket)
       - [Some further notes and gotchas](#some-further-notes-and-gotchas)
       - [Step 1b: Run `feast plan`](#step-1b-run-feast-plan)
       - [Step 1c: Run `feast apply`](#step-1c-run-feast-apply)
@@ -43,11 +44,15 @@ We focus on a specific example (that does not include online features or realtim
     - [Can I call `get_historical_features` without an entity dataframe? I want features for all entities.](#can-i-call-get_historical_features-without-an-entity-dataframe-i-want-features-for-all-entities)
 
 # Installing Feast
-Before we get started, first install Feast with AWS dependencies:
-
-```bash
-pip install "feast[aws]"
-```
+Before we get started, first install Feast with AWS or GCP dependencies:
+- AWS
+  ```bash
+  pip install "feast[aws]"
+  ```
+- GCP
+  ```bash
+  pip install "feast[gcp]"
+  ```
 
 # Exploring the data
 We've made some dummy data for this workshop in `infra/driver_stats.parquet`. Let's dive into what the data looks like. You can follow along in [explore_data.ipynb](explore_data.ipynb):
@@ -107,20 +112,17 @@ There are three user groups here worth considering. The ML platform team, the ML
 ## User group 1: ML Platform Team
 The team here sets up the centralized Feast feature repository and CI/CD in GitHub. This is what's seen in `feature_repo_aws/`.
 
-### Step 0: Setup S3 bucket for registry and file sources
+### Step 0 (AWS): Setup S3 bucket for registry and file sources
 This assumes you have an AWS account & Terraform setup. If you don't:
 - Set up an AWS account, install the AWS CLI, and setup your credentials with `aws configure` as per the [AWS credential quickstart](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html#cli-configure-quickstart-creds)
 - Install [Terraform](https://learn.hashicorp.com/tutorials/terraform/install-cli#install-terraform)
 
 We've made a simple Terraform project to help with S3 bucket creation (and uploading the test data we need):
-```bash
-cd infra/
-terraform init
-terraform apply
-```
+```console
+$ cd infra/aws
+$ terraform init
+$ terraform apply
 
-Output:
-```bash
 aws_s3_bucket.feast_bucket: Creating...
 aws_s3_bucket.feast_bucket: Creation complete after 3s [id=feast-workshop-danny]
 aws_s3_bucket_acl.feast_bucket_acl: Creating...
@@ -136,14 +138,81 @@ project_bucket = "s3://feast-workshop-danny"
 project_name = "danny"
 ```
 
-### Step 1: Setup the feature repo
-The first thing a platform team needs to do is setup a `feature_store.yaml` file within a version controlled repo like GitHub. `feature_store.yaml` is the primary way to configure an overall Feast project. We've setup a sample feature repository in `feature_repo_aws/`
+### Step 0 (GCP): Setup GCS bucket for registry and file sources
+This assumes you have an GCP account & Terraform setup. If you don't:
+- Set up an GCP account, install the `gcloud` CLI
+- Install [Terraform](https://learn.hashicorp.com/tutorials/terraform/install-cli#install-terraform)
 
-#### Step 1a: Use your configured S3 bucket
-There are two files in `feature_repo_aws` you need to change to point to your S3 bucket:
+We've made a simple Terraform project to help with GCS bucket creation (and uploading the test data we need). We'll also need a service account here which the GitHub CI can later use as well to manage resources.
+1. Create a project in GCP (https://console.cloud.google.com/, we use `feast-workshop` as the name below)
+2. Setup credentials (e.g. install `gcloud`, then do)
+    ```
+    gcloud config configurations create personal
+    gcloud config set project feast-workshop
+    gcloud auth login
+    ```
+3. Create service account and let terraform know where your credentials are
+    ```console
+    $ gcloud iam service-accounts create feast-workshop-sa  --display-name "Terraform and GitHub CI account"
+
+    Created service account [feast-workshop-sa].
+    ```
+4. Grant the service account access to your project:
+   ```console
+   $ gcloud projects add-iam-policy-binding feast-workshop --member serviceAccount:feast-workshop-sa@feast-workshop.iam.gserviceaccount.com --role roles/editor
+
+   Updated IAM policy for project [feast-workshop].
+   ```
+5. Generate keys
+    ``` console
+    $ gcloud iam service-accounts keys create ~/.config/gcloud/feast-workshop.json --iam-account feast-workshop-sa@feast-workshop.iam.gserviceaccount.com
+
+    created key [YOUR PRIVATE KEY] of type [json] as [/Users/dannychiao/.config/gcloud/feast-workshop.json] for [feast-workshop-sa@feast-workshop.iam.gserviceaccount.com]
+    ```
+5. Let terraform know where your credentials are:
+    ```bash
+    export GOOGLE_APPLICATION_CREDENTIALS=~/.config/gcloud/feast-workshop.json
+    ```
+6. Run the logic in `infra/gcp` 
+    ```console
+    $ cd infra/gcp
+    $ terraform init
+    $ terraform apply
+
+    var.gcp_project
+      The GCP project id
+
+      Enter a value: feast-workshop
+
+    var.project_name
+      The project identifier is used to uniquely namespace resources
+
+      Enter a value: danny
+
+    ...
+
+    google_storage_bucket.feast_bucket: Creating...
+    google_storage_bucket.feast_bucket: Creation complete after 1s [id=feast-workshop-danny]
+    google_storage_bucket_object.driver_stats_upload: Creating...
+    google_storage_bucket_object.driver_stats_upload: Creation complete after 0s [id=feast-workshop-danny-driver_stats.parquet]
+
+    Apply complete! Resources: 2 added, 0 changed, 0 destroyed.
+
+    Outputs:
+
+    project_bucket = "gs://feast-workshop-danny"
+    project_name = "danny"
+    ```
+
+### Step 1: Setup the feature repo
+The first thing a platform team needs to do is setup a `feature_store.yaml` file within a version controlled repo like GitHub. `feature_store.yaml` is the primary way to configure an overall Feast project. We've setup a sample feature repository in `feature_repo_aws/` or `feature_repo_gcp/`
+
+#### Step 1a: Use your configured bucket
+There are two files in `feature_repo_aws` or `feature_repo_gcp` you need to change to point to your bucket:
 
 **data_sources.py**
 ```python
+# AWS version
 driver_stats = FileSource(
     name="driver_stats_source",
     path="s3://[INSERT YOUR BUCKET]/driver_stats.parquet",
@@ -153,10 +222,21 @@ driver_stats = FileSource(
     description="A table describing the stats of a driver based on hourly logs",
     owner="test2@gmail.com",
 )
+
+# GCP version
+driver_stats = FileSource(
+    name="driver_stats_source",
+    path="gs://feast-workshop-danny/driver_stats.parquet",  # TODO: Replace with your bucket
+    timestamp_field="event_timestamp",
+    created_timestamp_column="created",
+    description="A table describing the stats of a driver based on hourly logs",
+    owner="test2@gmail.com",
+)
 ```
 
 **feature_store.yaml**
 ```yaml
+# AWS version
 project: feast_demo_aws
 provider: aws
 registry: s3://[INSERT YOUR BUCKET]/registry.pb
@@ -166,6 +246,14 @@ offline_store:
 flags:
   alpha_features: true
   on_demand_transforms: true
+
+# GCP version
+project: feast_demo_gcp
+provider: gcp
+registry: gcs://feast-workshop-danny/registry.pb # TODO: Replace with your bucket
+online_store: null
+offline_store:
+  type: file
 ```
 
 A quick explanation of what's happening in this `feature_store.yaml`:
@@ -300,7 +388,7 @@ We recommend automatically running `feast plan` on incoming PRs to describe what
 - This is useful for helping PR reviewers understand the effects of a change.
 - This can prevent breaking models in production (e.g. catching PRs that would change features used by an existing model version (`FeatureService)). 
 
-An example GitHub workflow that runs `feast plan` on PRs (See [feast_plan.yml](../.github/workflows/feast_plan.yml), which is setup in this workshop repo)
+An example GitHub workflow that runs `feast plan` on PRs (See [feast_plan_aws.yml](../.github/workflows/feast_plan_aws.yml) or [feast_plan_gcp.yml](../.github/workflows/feast_plan_gcp.yml), which are setup in this workshop repo)
 
 ```yaml
 name: Feast plan
@@ -351,7 +439,9 @@ jobs:
             ${{ steps.feast_plan.outputs.body }}
 ```
 
-You'll notice the above logic reference two secrets in GitHub corresponding to your AWS credentials. To make this workflow work, create GitHub secrets with your own `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`
+You'll notice the above logic reference two secrets in GitHub corresponding to your AWS credentials. 
+- To make this workflow work, create GitHub secrets with your own `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`
+- For GCP, you'll need a `GCP_PROJECT_ID` and `GCP_SA_KEY` for the service account key
 
 See the result on a PR opened in this repo: https://github.com/feast-dev/feast-workshop/pull/3
 
@@ -360,7 +450,7 @@ See the result on a PR opened in this repo: https://github.com/feast-dev/feast-w
 #### Step 3b: Automatically run `feast apply` when pull requests are merged
 When a pull request is merged to change the repo, we configure CI/CD to automatically run `feast apply`. 
 
-An example GitHub workflow which runs `feast apply` on PR merge (See [feast_apply.yml](../.github/workflows/feast_apply.yml), which is setup in this workshop repo)
+An example GitHub workflow which runs `feast apply` on PR merge (See [feast_apply_aws.yml](../.github/workflows/feast_apply_aws.yml), which is setup in this workshop repo)
 
 ```yaml
 name: Feast apply
@@ -460,7 +550,7 @@ A **feature service** is the recommended way to version a model's feature depend
 - Data lineage. Feature services give visibility into what features are depended on in production. Thus, we can prevent accidental changes
 
 ### Step 1: Fetch features for batch scoring (method 1)
-Go into the `module_0/client` directory and change the `feature_store.yaml` to use your S3 bucket.
+Go into the `module_0/client_aws` or `module_0/client_gcp` directory and change the `feature_store.yaml` to use your S3/GCS bucket.
 
 Then, run `python test_fetch.py`, which runs the above code (printing out the dataframe instead of the model):
 
@@ -476,9 +566,11 @@ $ python test_fetch.py
 ```
 
 ### Step 2: Fetch features for batch scoring (method 2)
-You can also not have a `feature_store.yaml` and directly instantiate a `RepoConfig` object in Python (which is the in memory representation of the contents of `feature_store.yaml`). See the `module_0/client_no_yaml` directory for an example of this. The output of `python test_fetch.py` will be identical to the previous step.
+You can also not have a `feature_store.yaml` and directly instantiate a `RepoConfig` object in Python (which is the in memory representation of the contents of `feature_store.yaml`). See the `module_0/client_no_yaml` directory for an example of this. 
 
-A quick snippet of the code:
+We are going to run one of the two python files depending on if you're on GCP vs AWS. The output will be identical to the previous step.
+
+A quick snippet of the AWS code:
 ```python
 from feast import FeatureStore, RepoConfig
 from feast.repo_config import RegistryConfig
@@ -493,6 +585,17 @@ repo_config = RepoConfig(
 store = FeatureStore(config=repo_config)
 ...
 training_df = store.get_historical_features(...).to_df()
+```
+
+```console
+$ python test_fetch_aws.py
+
+      driver_id                  event_timestamp  conv_rate  acc_rate
+720        1002 2022-05-15 20:46:00.308163+00:00   0.465875  0.315721
+1805       1005 2022-05-15 20:46:00.308163+00:00   0.394072  0.046118
+1083       1003 2022-05-15 20:46:00.308163+00:00   0.869917  0.779562
+359        1001 2022-05-15 20:46:00.308163+00:00   0.404588  0.407571
+1444       1004 2022-05-15 20:46:00.308163+00:00   0.977276  0.051582
 ```
 
 ### Step 3 (optional): Scaling `get_historical_features` to large datasets
@@ -536,7 +639,7 @@ We don't need to do anything new here since data scientists will be doing many o
 
 There are two ways data scientists can use Feast:
 - Use Feast primarily as a way of pulling production ready features. 
-  - See the `client/` or `client_no_yaml` folders for examples of how users can pull features by only having a `feature_store.yaml` or instantiating a `RepoConfig` object
+  - See the `client_aws/` or `client_no_yaml` folders for examples of how users can pull features by only having a `feature_store.yaml` or instantiating a `RepoConfig` object
   - This is **not recommended** since data scientists cannot register feature services to indicate they depend on certain features in production. 
 - **[Recommended]** Have a local copy of the feature repository (e.g. `git clone`) and author / iterate / re-use features. 
   - Data scientist can:
@@ -549,7 +652,7 @@ There are two ways data scientists can use Feast:
 Data scientists can also investigate other models and their dependent features / data sources / on demand transformations through the repository or through the Web UI (by running `feast ui`)
 
 # Exercise: merge a sample PR in your fork
-In your own fork of the `feast-workshop` project, with the above setup (i.e. you've made GitHub secrets with your own `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`), try making a change with a pull request! And then merge that pull request to see the change propagate in the registry. 
+In your own fork of the `feast-workshop` project, with the above setup (i.e. you've made GitHub secrets with your own `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` or `GCP_PROJECT_ID` and `GCP_SA_KEY`), try making a change with a pull request! And then merge that pull request to see the change propagate in the registry. 
 
 Some ideas for what to try:
 - Changing metadata (owner, description, tags) on an existing `FeatureView`

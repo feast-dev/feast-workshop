@@ -1,0 +1,48 @@
+name: Feast plan (GCP)
+
+on: [pull_request]
+
+jobs:
+  feast_plan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup Python
+        id: setup-python
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.7"
+          architecture: x64
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v0
+        with:
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+          service_account_key: ${{ secrets.GCP_SA_KEY }}
+          export_default_credentials: true
+      - name: Use gcloud CLI
+        run: gcloud info
+
+      # Run `feast plan`
+      - uses: actions/checkout@v2
+      - name: Install feast
+        run: pip install "feast[aws]"
+      - name: Capture `feast plan` in a variable
+        id: feast_plan
+        env:
+          FEAST_USAGE: "False"
+          FEAST_FORCE_USAGE_UUID: None
+          IS_TEST: "True"
+        run: |
+          body=$(cd module_0/feature_repo_gcp; feast plan)
+          body="${body//'%'/'%25'}"
+          body="${body//$'\n'/'%0A'}"
+          body="${body//$'\r'/'%0D'}"
+          echo "::set-output name=body::$body"
+
+      # Post a comment on the PR with the results of `feast plan`
+      - name: Create comment
+        uses: peter-evans/create-or-update-comment@v1
+        if: ${{ steps.feast_plan.outputs.body }}
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          body: |
+            ${{ steps.feast_plan.outputs.body }}

@@ -1,0 +1,6 @@
+project: feast_demo_gcp
+provider: gcp
+registry: gs://feast-workshop-danny/registry.pb # TODO: Replace with your bucket
+online_store: null
+offline_store:
+  type: file

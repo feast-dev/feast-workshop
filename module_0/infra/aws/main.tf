@@ -15,5 +15,5 @@ resource "aws_s3_bucket_acl" "feast_bucket_acl" {
 resource "aws_s3_object" "driver_stats_upload" {
   bucket = aws_s3_bucket.feast_bucket.bucket
   key    = "driver_stats.parquet"
-  source = "${path.module}/driver_stats.parquet"
+  source = "${path.module}/../driver_stats.parquet"
 }

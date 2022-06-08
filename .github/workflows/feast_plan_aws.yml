@@ -1,4 +1,4 @@
-name: Feast plan
+name: Feast plan (AWS)
 
 on: [pull_request]
 
