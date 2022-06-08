@@ -123,6 +123,13 @@ $ cd infra/aws
 $ terraform init
 $ terraform apply
 
+var.project_name
+  The project identifier is used to uniquely namespace resources
+
+  Enter a value: danny
+
+...
+
 aws_s3_bucket.feast_bucket: Creating...
 aws_s3_bucket.feast_bucket: Creation complete after 3s [id=feast-workshop-danny]
 aws_s3_bucket_acl.feast_bucket_acl: Creating...
@@ -441,7 +448,7 @@ jobs:
 
 You'll notice the above logic reference two secrets in GitHub corresponding to your AWS credentials. 
 - To make this workflow work, create GitHub secrets with your own `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`
-- For GCP, you'll need a `GCP_PROJECT_ID` and `GCP_SA_KEY` for the service account key
+- For GCP, you'll need a `GCP_PROJECT_ID` and `GCP_SA_KEY` for the service account key json (e.g. contents of `~/.config/gcloud/feast-workshop.json` in the above)
 
 See the result on a PR opened in this repo: https://github.com/feast-dev/feast-workshop/pull/3
 
