@@ -6,3 +6,4 @@ terraform.tfstate
 terraform.tfstate.backup
 .terraform*
 *.iml
+**/feast-postgres-data/*

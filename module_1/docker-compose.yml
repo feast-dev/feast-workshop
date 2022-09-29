@@ -44,6 +44,9 @@ services:
     build:
       context: .
       dockerfile: feature_repo/Dockerfile
+    depends_on:
+      registry:
+        condition: service_healthy
     ports:
       - "6567:6566"
     volumes:
@@ -58,6 +61,9 @@ services:
     build:
       context: .
       dockerfile: feature_repo/Dockerfile
+    depends_on:
+      registry:
+        condition: service_healthy
     ports:
       - "6566:6566"
     volumes:
@@ -66,3 +72,19 @@ services:
         target: /data/local_registry.db
     links:
       - redis
+
+  registry:
+    container_name: registry
+    image: postgres:10.5
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=mysecretpassword
+      - POSTGRES_DB=feast
+    ports:
+      - "55001:5432"
+    volumes: 
+      - ./feast-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 5s
+      retries: 5

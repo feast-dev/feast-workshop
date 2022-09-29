@@ -20,7 +20,7 @@ Feast solves several common challenges teams face:
 ### Pre-requisites
 This workshop assumes you have the following installed:
 - A local development environment that supports running Jupyter notebooks (e.g. VSCode with Jupyter plugin)
-- Python 3.7+
+- Python 3.8+
 - pip
   - Docker & Docker Compose (e.g. `brew install docker docker-compose`)
 - **Module 0 pre-requisites**:

@@ -54,30 +54,32 @@ The key thing to note is that there are now a `miles_driven` field and a `daily_
 ```yaml
 project: feast_demo_local
 provider: local
-registry: 
-  path: data/local_registry.db
-  cache_ttl_seconds: 5
+registry:
+  registry_type: sql
+  path: postgresql://postgres:mysecretpassword@127.0.0.1:55001/feast
 online_store:
   type: redis
   connection_string: localhost:6379
 offline_store:
   type: file
+entity_key_serialization_version: 2
 ```
 
-The key thing to note for now is the online store has been configured to be Redis. This is specifically for a single Redis node. If you want to use a Redis cluster, then you'd change this to something like:
+The key thing to note for now is the registry is now swapped for a SQL backed registry (Postgres) and the online store has been configured to be Redis. This is specifically for a single Redis node. If you want to use a Redis cluster, then you'd change this to something like:
 
 ```yaml
 project: feast_demo_local
 provider: local
-registry: 
-  path: data/local_registry.db
-  cache_ttl_seconds: 5
+registry:
+  registry_type: sql
+  path: postgresql://postgres:mysecretpassword@127.0.0.1:55001/feast
 online_store:
   type: redis
   redis_type: redis_cluster
   connection_string: "redis1:6379,redis2:6379,ssl=true,password=my_password"
 offline_store:
   type: file
+entity_key_serialization_version: 2
 ```
 
 Because we use `redis-py` under the hood, this means Feast also works well with hosted Redis instances like AWS Elasticache ([docs](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/ElastiCache-Getting-Started-Tutorials-Connecting.html)). 
@@ -90,14 +92,15 @@ We then use Docker Compose to spin up the services we need.
 - This also deploys a Feast push server (on port 6567) + a Feast feature server (on port 6566). 
   - These servers embed a `feature_store.yaml` file that enables them to connect to a remote registry. The Dockerfile mostly delegates to calling the `feast serve` CLI command, which instantiates a Feast python server ([docs](https://docs.feast.dev/reference/feature-servers/python-feature-server)):
     ```yaml
-    FROM python:3.7
+    FROM python:3.8
 
-    RUN pip install "feast[redis]"
+    RUN pip install "feast[redis,postgres]"
 
     COPY feature_repo/feature_store.yaml feature_store.yaml
 
-    # Needed to reach online store within Docker network.
+    # Needed to reach online store and registry within Docker network.
     RUN sed -i 's/localhost:6379/redis:6379/g' feature_store.yaml
+    RUN sed -i 's/127.0.0.1:55001/registry:5432/g' feature_store.yaml
     ENV FEAST_USAGE=False
 
     CMD ["feast", "serve", "-h", "0.0.0.0"]
@@ -115,7 +118,8 @@ Creating broker               ... done
 Creating feast_feature_server ... done
 Creating feast_push_server    ... done
 Creating kafka_events         ... done
-Attaching to zookeeper, redis, broker, feast_push_server, feast_feature_server, kafka_events
+Creating registry             ... done
+Attaching to zookeeper, redis, broker, feast_push_server, feast_feature_server, kafka_events, registry
 ...
 ```
 ## Step 5: Why register streaming features in Feast?
@@ -179,7 +183,9 @@ Run the Jupyter notebook ([feature_repo/workshop.ipynb](feature_repo/module_1.ip
 ### Scheduling materialization
 To ensure fresh features, you'll want to schedule materialization jobs regularly. This can be as simple as having a cron job that calls `feast materialize-incremental`.
 
-Users may also be interested in integrating with Airflow, in which case you can build a custom Airflow image with the Feast SDK installed, and then use a `BashOperator` (with `feast materialize-incremental`) or `PythonOperator` (with `store.materialize_incremental(datetime.datetime.now())`):
+Users may also be interested in integrating with Airflow, in which case you can build a custom Airflow image with the Feast SDK installed, and then use a `BashOperator` (with `feast materialize-incremental`) or `PythonOperator` (with `store.materialize_incremental(datetime.datetime.now())`).
+
+We setup a standalone version of Airflow to 
 
 #### Airflow PythonOperator
 
