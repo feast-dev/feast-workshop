@@ -14,7 +14,7 @@ In this module, we focus on building features for online serving, and keeping th
   - [Step 1: Install Feast](#step-1-install-feast)
   - [Step 2: Inspect the data](#step-2-inspect-the-data)
   - [Step 3: Inspect the `feature_store.yaml`](#step-3-inspect-the-feature_storeyaml)
-  - [Step 4: Spin up Kafka + Redis + Feast services](#step-4-spin-up-kafka--redis--feast-services)
+  - [Step 4: Spin up Kafka + Redis + Feast SQL Registry + Feast services](#step-4-spin-up-kafka--redis--feast-sql-registry--feast-services)
   - [Step 5: Why register streaming features in Feast?](#step-5-why-register-streaming-features-in-feast)
     - [Understanding the PushSource](#understanding-the-pushsource)
   - [Step 6: Materialize batch features & ingest streaming features](#step-6-materialize-batch-features--ingest-streaming-features)
@@ -84,11 +84,12 @@ entity_key_serialization_version: 2
 
 Because we use `redis-py` under the hood, this means Feast also works well with hosted Redis instances like AWS Elasticache ([docs](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/ElastiCache-Getting-Started-Tutorials-Connecting.html)). 
 
-## Step 4: Spin up Kafka + Redis + Feast services
+## Step 4: Spin up Kafka + Redis + Feast SQL Registry + Feast services
 
 We then use Docker Compose to spin up the services we need.
 - This leverages a script (in `kafka_demo/`) that creates a topic, reads from `feature_repo/data/driver_stats.parquet`, generates newer timestamps, and emits them to the topic.
 - This also deploys an instance of Redis.
+- **Note:** one big difference between this and the previous module is its choice of using Postgres as the registry. See [Using Scalable Registry](https://docs.feast.dev/tutorials/using-scalable-registry) for details.
 - This also deploys a Feast push server (on port 6567) + a Feast feature server (on port 6566). 
   - These servers embed a `feature_store.yaml` file that enables them to connect to a remote registry. The Dockerfile mostly delegates to calling the `feast serve` CLI command, which instantiates a Feast python server ([docs](https://docs.feast.dev/reference/feature-servers/python-feature-server)):
     ```yaml
