@@ -14,20 +14,20 @@ In this module, we focus on building features for online serving, and keeping th
   - [Step 1: Install Feast](#step-1-install-feast)
   - [Step 2: Inspect the data](#step-2-inspect-the-data)
   - [Step 3: Inspect the `feature_store.yaml`](#step-3-inspect-the-feature_storeyaml)
-  - [Step 4: Spin up Kafka + Redis + Feast services](#step-4-spin-up-kafka--redis--feast-services)
+  - [Step 4: Spin up Kafka + Redis + Feast SQL Registry + Feast services](#step-4-spin-up-kafka--redis--feast-sql-registry--feast-services)
   - [Step 5: Why register streaming features in Feast?](#step-5-why-register-streaming-features-in-feast)
     - [Understanding the PushSource](#understanding-the-pushsource)
   - [Step 6: Materialize batch features & ingest streaming features](#step-6-materialize-batch-features--ingest-streaming-features)
+    - [Configuring materialization](#configuring-materialization)
     - [Scheduling materialization](#scheduling-materialization)
-      - [Airflow PythonOperator](#airflow-pythonoperator)
-      - [Airflow BashOperator](#airflow-bashoperator)
+      - [Examine the Airflow DAG](#examine-the-airflow-dag)
+      - [Q: What if different feature views have different freshness requirements?](#q-what-if-different-feature-views-have-different-freshness-requirements)
     - [A note on Feast feature servers + push servers](#a-note-on-feast-feature-servers--push-servers)
 - [Conclusion](#conclusion)
 - [FAQ](#faq)
     - [How do you synchronize materialized features with pushed features from streaming?](#how-do-you-synchronize-materialized-features-with-pushed-features-from-streaming)
     - [Does Feast allow pushing features to the offline store?](#does-feast-allow-pushing-features-to-the-offline-store)
     - [Can feature / push servers refresh their registry in response to an event? e.g. after a PR merges and `feast apply` is run?](#can-feature--push-servers-refresh-their-registry-in-response-to-an-event-eg-after-a-pr-merges-and-feast-apply-is-run)
-    - [How do I speed up or scale up materialization?](#how-do-i-speed-up-or-scale-up-materialization)
 
 # Workshop
 ## Step 1: Install Feast
@@ -54,50 +54,54 @@ The key thing to note is that there are now a `miles_driven` field and a `daily_
 ```yaml
 project: feast_demo_local
 provider: local
-registry: 
-  path: data/local_registry.db
-  cache_ttl_seconds: 5
+registry:
+  registry_type: sql
+  path: postgresql://postgres:mysecretpassword@127.0.0.1:55001/feast
 online_store:
   type: redis
   connection_string: localhost:6379
 offline_store:
   type: file
+entity_key_serialization_version: 2
 ```
 
-The key thing to note for now is the online store has been configured to be Redis. This is specifically for a single Redis node. If you want to use a Redis cluster, then you'd change this to something like:
+The key thing to note for now is the registry is now swapped for a SQL backed registry (Postgres) and the online store has been configured to be Redis. This is specifically for a single Redis node. If you want to use a Redis cluster, then you'd change this to something like:
 
 ```yaml
 project: feast_demo_local
 provider: local
-registry: 
-  path: data/local_registry.db
-  cache_ttl_seconds: 5
+registry:
+  registry_type: sql
+  path: postgresql://postgres:mysecretpassword@127.0.0.1:55001/feast
 online_store:
   type: redis
   redis_type: redis_cluster
   connection_string: "redis1:6379,redis2:6379,ssl=true,password=my_password"
 offline_store:
   type: file
+entity_key_serialization_version: 2
 ```
 
 Because we use `redis-py` under the hood, this means Feast also works well with hosted Redis instances like AWS Elasticache ([docs](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/ElastiCache-Getting-Started-Tutorials-Connecting.html)). 
 
-## Step 4: Spin up Kafka + Redis + Feast services
+## Step 4: Spin up Kafka + Redis + Feast SQL Registry + Feast services
 
 We then use Docker Compose to spin up the services we need.
 - This leverages a script (in `kafka_demo/`) that creates a topic, reads from `feature_repo/data/driver_stats.parquet`, generates newer timestamps, and emits them to the topic.
 - This also deploys an instance of Redis.
+- **Note:** one big difference between this and the previous module is its choice of using Postgres as the registry. See [Using Scalable Registry](https://docs.feast.dev/tutorials/using-scalable-registry) for details.
 - This also deploys a Feast push server (on port 6567) + a Feast feature server (on port 6566). 
   - These servers embed a `feature_store.yaml` file that enables them to connect to a remote registry. The Dockerfile mostly delegates to calling the `feast serve` CLI command, which instantiates a Feast python server ([docs](https://docs.feast.dev/reference/feature-servers/python-feature-server)):
     ```yaml
-    FROM python:3.7
+    FROM python:3.8
 
-    RUN pip install "feast[redis]"
+    RUN pip install "feast[redis,postgres]"
 
     COPY feature_repo/feature_store.yaml feature_store.yaml
 
-    # Needed to reach online store within Docker network.
+    # Needed to reach online store and registry within Docker network.
     RUN sed -i 's/localhost:6379/redis:6379/g' feature_store.yaml
+    RUN sed -i 's/127.0.0.1:55001/registry:5432/g' feature_store.yaml
     ENV FEAST_USAGE=False
 
     CMD ["feast", "serve", "-h", "0.0.0.0"]
@@ -115,7 +119,8 @@ Creating broker               ... done
 Creating feast_feature_server ... done
 Creating feast_push_server    ... done
 Creating kafka_events         ... done
-Attaching to zookeeper, redis, broker, feast_push_server, feast_feature_server, kafka_events
+Creating registry             ... done
+Attaching to zookeeper, redis, broker, feast_push_server, feast_feature_server, kafka_events, registry
 ...
 ```
 ## Step 5: Why register streaming features in Feast?
@@ -168,7 +173,7 @@ In the upcoming release, Feast will support the concept of a `StreamFeatureView`
 
 We'll switch gears into a Jupyter notebook. This will guide you through:
 - Registering a `FeatureView` that has a single schema across both a batch source (`FileSource`) with aggregate features and a stream source (`PushSource`).
-  - **Note:** Feast will, in the future, also support directly authoring a `StreamFeatureView` that contains stream transformations / aggregations (e.g. via Spark, Flink, or Bytewax)
+  - **Note:** Feast also supports directly authoring a `StreamFeatureView` that contains stream transformations / aggregations (e.g. via Spark, Flink, or Bytewax), but the onus is on you to actually execute those transformations.
 - Materializing feature view values from batch sources to the online store (e.g. Redis).
 - Ingesting feature view values from streaming sources (e.g. window aggregate features from Spark + Kafka)
 - Retrieve features at low latency from Redis through Feast.
@@ -176,43 +181,70 @@ We'll switch gears into a Jupyter notebook. This will guide you through:
 
 Run the Jupyter notebook ([feature_repo/workshop.ipynb](feature_repo/module_1.ipynb)).
 
+### Configuring materialization
+By default, materialization will pull all the latest feature values for each unique entity into memory, and then write to the online store. 
+
+You can speed up / scale this up in different ways:
+- Using a more scalable materialization mechanism (e.g. using the Bytewax or Spark materialization engines)
+- Running materialization jobs on a per feature view basis
+- Running materialization jobs in parallel
+
+To run many parallel materialization jobs, you'll want to use the **SQL registry** (which is already used in this module).
+Then you could run multiple materialization jobs in parallel (e.g. using `feast materialize [FEATURE_VIEW_NAME] start_time end_time`) 
+
 ### Scheduling materialization
-To ensure fresh features, you'll want to schedule materialization jobs regularly. This can be as simple as having a cron job that calls `feast materialize-incremental`.
+To ensure fresh features, you'll want to schedule materialization jobs regularly. This can be as simple as having a cron job that calls `feast materialize-incremental`. 
 
-Users may also be interested in integrating with Airflow, in which case you can build a custom Airflow image with the Feast SDK installed, and then use a `BashOperator` (with `feast materialize-incremental`) or `PythonOperator` (with `store.materialize_incremental(datetime.datetime.now())`):
+Users may also be interested in integrating with Airflow, in which case you can build a custom Airflow image with the Feast SDK installed, and then use a `PythonOperator` (with `store.materialize`).
 
-#### Airflow PythonOperator
+We setup a standalone version of Airflow to set up the PythonOperator (Airflow now prefers @task for this). 
 
-```python
-# Define Python callable
-def materialize():
-  repo_config = RepoConfig(
-    registry=RegistryConfig(path="s3://[YOUR BUCKET]/registry.pb"),
-    project="feast_demo_aws",
-    provider="aws",
-    offline_store="file",
-    online_store=DynamoDBOnlineStoreConfig(region="us-west-2")
-  )
-  store = FeatureStore(config=repo_config)
-  store.materialize_incremental(datetime.datetime.now())
-
-# Use PythonOperator
-materialize_python = PythonOperator(
-    task_id='materialize_python',
-    python_callable=materialize,
-)
+```bash
+cd airflow_demo; sh setup_airflow.sh
 ```
 
-#### Airflow BashOperator
+#### Examine the Airflow DAG
+
+The example dag is going to run on a daily basis and materialize *all* feature views based on the start and end interval. Note that there is a 1 hr overlap in the start time to account for potential late arriving data in the offline store.
+
 ```python
-# Use BashOperator
-materialize_bash = BashOperator(
-    task_id='materialize',
-    bash_command=f'feast materialize-incremental {datetime.datetime.now().replace(microsecond=0).isoformat()}',
+@dag(
+    schedule="@daily",
+    catchup=False,
+    start_date=pendulum.datetime(2021, 1, 1, tz="UTC"),
+    tags=["feast"],
 )
+def materialize_dag():
+    @task()
+    def materialize(data_interval_start=None, data_interval_end=None):
+        repo_config = RepoConfig(
+            registry=RegistryConfig(
+                registry_type="sql",
+                path="postgresql://postgres:mysecretpassword@127.0.0.1:55001/feast",
+            ),
+            project="feast_demo_local",
+            provider="local",
+            offline_store="file",
+            online_store=RedisOnlineStoreConfig(connection_string="localhost:6379"),
+            entity_key_serialization_version=2,
+        )
+        store = FeatureStore(config=repo_config)
+        # Add 1 hr overlap to account for late data
+        # Note: normally, you'll probably have different feature views with different freshness requirements, instead of materializing all feature views every day.
+        store.materialize(data_interval_start.subtract(hours=1), data_interval_end)
+
+    materialize()
+
+materialization_dag = materialize_dag()
 ```
 
-See also [FAQ: How do I speed up or scale up materialization?](#how-do-i-speed-up-or-scale-up-materialization)
+In this test case, you can also use a single command `feast materialize-incremental $(date +%Y-%m-%d)` and that will materialize until the current time. 
+
+#### Q: What if different feature views have different freshness requirements?
+
+There's no built in mechanism for this, but you could store this logic in the feature view tags (e.g. a `batch_schedule`).
+ 
+Then, you can parse these feature view in your Airflow job. You could for example have one DAG that runs all the daily `batch_schedule` feature views, and another DAG that runs all feature views with an hourly `batch_schedule`.
 
 ### A note on Feast feature servers + push servers
 The above notebook introduces a way to curl an HTTP endpoint to push or retrieve features from Redis.
@@ -253,24 +285,7 @@ This relies on individual online store implementations. The existing Redis onlin
 Doing this event timestamp checking is expensive though and slows down writes. In many cases, this is not preferred. Databases often support storing multiple versions of the same value, so you can leverage that (+ TTLs) to query the most recent version at read time.
 
 ### Does Feast allow pushing features to the offline store?
-Not yet! See more details at https://github.com/feast-dev/feast/issues/2732
-
-Many users have asked for this functionality as a quick way to get started, but often users work with two flows:
-- To power the online store, using stream processing to generate fresh features and pushing to the online store
-- To power the offline store, using some ETL / ELT pipelines that process and clean the raw data.
-
-Though this is more complex, one key advantage of this is that you can construct new features based on the data while iterating on model training. If you rely on streaming features to generate historical feature values, then you need to rely on a log-and-wait approach, which can slow down model iteration.
+Yes! See more details at https://docs.feast.dev/reference/data-sources/push#pushing-data
 
 ### Can feature / push servers refresh their registry in response to an event? e.g. after a PR merges and `feast apply` is run?
 Unfortunately, currently the servers don't support this. Feel free to contribute a PR though to enable this! The tricky part here is that Feast would need to keep track of these servers in the registry (or in some other way), which is not the way Feast is currently designed.
-
-### How do I speed up or scale up materialization?
-Materialization in Feast by default pulls the latest feature values for each unique entity locally and writes in batches to the online store.
-
-- Feast users can materialize multiple feature views by using the CLI:
-`feast materialize-incremental [FEATURE_VIEW_NAME]`
-  - **Caveat**: By default, Feast's registry store is a single protobuf written to a file. This means that there's the chance that metadata around materialization intervals gets lost if the registry has changed during materialization.
-    - The community is ideating on how to improve this. See [RFC-035: Scalable Materialization](https://docs.google.com/document/d/1tCZzClj3H8CfhJzccCytWK-bNDw_lkZk4e3fUbPYIP0/edit#)
-- Users often also implement their own custom providers. The provider interface has a `materialize_single_feature_view` method, which users are free to implement differently (e.g. materializing with Spark or Dataflow jobs).
-
-In general, the community is actively investigating ways to speed up materialization. Contributions are welcome!

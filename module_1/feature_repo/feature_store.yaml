@@ -1,10 +1,12 @@
 project: feast_demo_local
 provider: local
-registry: 
-  path: data/local_registry.db
-  cache_ttl_seconds: 5
+registry:
+  registry_type: sql
+  path: postgresql://postgres:mysecretpassword@127.0.0.1:55001/feast
 online_store:
   type: redis
   connection_string: localhost:6379
 offline_store:
   type: file
+entity_key_serialization_version: 2
+

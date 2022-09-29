@@ -4,3 +4,4 @@ registry: s3://feast-workshop-danny/registry.pb # TODO: Replace with your bucket
 online_store: null
 offline_store:
   type: file
+entity_key_serialization_version: 2
