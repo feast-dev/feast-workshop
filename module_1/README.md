@@ -21,7 +21,8 @@ In this module, we focus on building features for online serving, and keeping th
     - [A note on Feast feature servers + push servers](#a-note-on-feast-feature-servers--push-servers)
   - [Step 7: Scaling up and scheduling materialization](#step-7-scaling-up-and-scheduling-materialization)
     - [Background: configuring materialization](#background-configuring-materialization)
-    - [Step 7a: Scheduling materialization](#step-7a-scheduling-materialization)
+    - [Step 7: Scheduling materialization](#step-7-scheduling-materialization)
+      - [Step 7a: Setting up Airflow](#step-7a-setting-up-airflow)
       - [Step 7b: Examine the Airflow DAG](#step-7b-examine-the-airflow-dag)
       - [Q: What if different feature views have different freshness requirements?](#q-what-if-different-feature-views-have-different-freshness-requirements)
       - [Step 7c: Enable the Airflow DAG](#step-7c-enable-the-airflow-dag)
@@ -220,10 +221,12 @@ You can speed up / scale this up in different ways:
 To run many parallel materialization jobs, you'll want to use the **SQL registry** (which is already used in this module).
 Then you could run multiple materialization jobs in parallel (e.g. using `feast materialize [FEATURE_VIEW_NAME] start_time end_time`) 
 
-### Step 7a: Scheduling materialization
+### Step 7: Scheduling materialization
 To ensure fresh features, you'll want to schedule materialization jobs regularly. This can be as simple as having a cron job that calls `feast materialize-incremental`. 
 
 Users may also be interested in integrating with Airflow, in which case you can build a custom Airflow image with the Feast SDK installed, and then use a `PythonOperator` (with `store.materialize`).
+
+#### Step 7a: Setting up Airflow
 
 We setup a standalone version of Airflow to set up the PythonOperator (Airflow now prefers @task for this). 
 
