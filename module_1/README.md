@@ -35,9 +35,9 @@ In this module, we focus on building features for online serving, and keeping th
 # Workshop
 ## Step 1: Install Feast
 
-First, we install Feast with Spark and Redis support:
+First, we install Feast with Spark and Postgres and Redis support:
 ```bash
-pip install "feast[spark,redis]"
+pip install "feast[spark,postgres,redis]"
 ```
 
 ## Step 2: Inspect the data
