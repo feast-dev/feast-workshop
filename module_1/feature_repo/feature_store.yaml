@@ -8,3 +8,5 @@ online_store:
   connection_string: localhost:6379
 offline_store:
   type: file
+entity_key_serialization_version: 2
+
