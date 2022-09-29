@@ -1,6 +1,6 @@
 # Airflow needs a home. `~/airflow` is the default, but you can put it
 # somewhere else if you prefer (optional)
-export AIRFLOW_HOME=airflow_home
+export AIRFLOW_HOME=$(pwd)/airflow_home
 export AIRFLOW__CORE__LOAD_EXAMPLES=False
 
 # Install Airflow using the constraints file
@@ -17,3 +17,7 @@ airflow standalone
 
 # Visit localhost:8080 in the browser and use the admin account details
 # shown on the terminal to login.
+
+# Setup dags
+mkdir $AIRFLOW_HOME/dags
+cp dag.py $AIRFLOW_HOME/dags
