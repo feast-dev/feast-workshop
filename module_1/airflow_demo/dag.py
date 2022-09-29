@@ -31,6 +31,8 @@ def materialize_dag():
         os.environ["NO_PROXY"] = "*"
         store = FeatureStore(config=repo_config)
         # Add 1 hr overlap to account for late data
+        # Note: normally, you'll probably have different feature views with different freshness requirements, instead
+        # of materializing all feature views every day.
         store.materialize(data_interval_start.subtract(hours=1), data_interval_end)
 
     materialize()
