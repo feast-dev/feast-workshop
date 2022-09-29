@@ -18,11 +18,14 @@ In this module, we focus on building features for online serving, and keeping th
   - [Step 5: Why register streaming features in Feast?](#step-5-why-register-streaming-features-in-feast)
     - [Understanding the PushSource](#understanding-the-pushsource)
   - [Step 6: Materialize batch features & ingest streaming features](#step-6-materialize-batch-features--ingest-streaming-features)
-    - [Configuring materialization](#configuring-materialization)
-    - [Scheduling materialization](#scheduling-materialization)
-      - [Examine the Airflow DAG](#examine-the-airflow-dag)
-      - [Q: What if different feature views have different freshness requirements?](#q-what-if-different-feature-views-have-different-freshness-requirements)
     - [A note on Feast feature servers + push servers](#a-note-on-feast-feature-servers--push-servers)
+  - [Step 7: Scaling up and scheduling materialization](#step-7-scaling-up-and-scheduling-materialization)
+    - [Background: configuring materialization](#background-configuring-materialization)
+    - [Step 7a: Scheduling materialization](#step-7a-scheduling-materialization)
+      - [Step 7b: Examine the Airflow DAG](#step-7b-examine-the-airflow-dag)
+      - [Q: What if different feature views have different freshness requirements?](#q-what-if-different-feature-views-have-different-freshness-requirements)
+      - [Step 7c: Enable the Airflow DAG](#step-7c-enable-the-airflow-dag)
+    - [Step 7d (optional): Run a backfill](#step-7d-optional-run-a-backfill)
 - [Conclusion](#conclusion)
 - [FAQ](#faq)
     - [How do you synchronize materialized features with pushed features from streaming?](#how-do-you-synchronize-materialized-features-with-pushed-features-from-streaming)
@@ -181,7 +184,32 @@ We'll switch gears into a Jupyter notebook. This will guide you through:
 
 Run the Jupyter notebook ([feature_repo/workshop.ipynb](feature_repo/module_1.ipynb)).
 
-### Configuring materialization
+### A note on Feast feature servers + push servers
+The above notebook introduces a way to curl an HTTP endpoint to push or retrieve features from Redis.
+
+The servers by default cache the registry (expiring and reloading every 10 minutes). If you want to customize that time period, you can do so in `feature_store.yaml`.
+
+Let's look at the `feature_store.yaml` used in this module (which configures the registry differently than in the previous module):
+
+```yaml
+project: feast_demo_local
+provider: local
+registry:
+  path: data/local_registry.db
+  cache_ttl_seconds: 5
+online_store:
+  type: redis
+  connection_string: localhost:6379
+offline_store:
+  type: file
+```
+
+The `registry` config maps to constructor arguments for `RegistryConfig` Pydantic model([reference](https://rtd.feast.dev/en/master/index.html#feast.repo_config.RegistryConfig)).
+- In the `feature_store.yaml` above, note that there is a `cache_ttl_seconds` of 5. This ensures that every five seconds, the feature server and push server will expire its registry cache. On the following request, it will refresh its registry by pulling from the registry path.
+- Feast adds a convenience wrapper so if you specify just `registry: [path]`, Feast will map that to `RegistryConfig(path=[your path])`.
+
+## Step 7: Scaling up and scheduling materialization
+### Background: configuring materialization
 By default, materialization will pull all the latest feature values for each unique entity into memory, and then write to the online store. 
 
 You can speed up / scale this up in different ways:
@@ -192,7 +220,7 @@ You can speed up / scale this up in different ways:
 To run many parallel materialization jobs, you'll want to use the **SQL registry** (which is already used in this module).
 Then you could run multiple materialization jobs in parallel (e.g. using `feast materialize [FEATURE_VIEW_NAME] start_time end_time`) 
 
-### Scheduling materialization
+### Step 7a: Scheduling materialization
 To ensure fresh features, you'll want to schedule materialization jobs regularly. This can be as simple as having a cron job that calls `feast materialize-incremental`. 
 
 Users may also be interested in integrating with Airflow, in which case you can build a custom Airflow image with the Feast SDK installed, and then use a `PythonOperator` (with `store.materialize`).
@@ -203,7 +231,7 @@ We setup a standalone version of Airflow to set up the PythonOperator (Airflow n
 cd airflow_demo; sh setup_airflow.sh
 ```
 
-#### Examine the Airflow DAG
+#### Step 7b: Examine the Airflow DAG
 
 The example dag is going to run on a daily basis and materialize *all* feature views based on the start and end interval. Note that there is a 1 hr overlap in the start time to account for potential late arriving data in the offline store.
 
@@ -246,29 +274,22 @@ There's no built in mechanism for this, but you could store this logic in the fe
  
 Then, you can parse these feature view in your Airflow job. You could for example have one DAG that runs all the daily `batch_schedule` feature views, and another DAG that runs all feature views with an hourly `batch_schedule`.
 
-### A note on Feast feature servers + push servers
-The above notebook introduces a way to curl an HTTP endpoint to push or retrieve features from Redis.
+#### Step 7c: Enable the Airflow DAG
+Now go to `localhost:8080`, use Airflow's auto-generated admin password to login, and toggle on the `materialize_dag`. It should run one task automatically.
 
-The servers by default cache the registry (expiring and reloading every 10 minutes). If you want to customize that time period, you can do so in `feature_store.yaml`.
+### Step 7d (optional): Run a backfill
+To run a backfill (i.e. process previous days of the above while letting Airflow manage state), you can do (from the `airflow_demo` directory):
 
-Let's look at the `feature_store.yaml` used in this module (which configures the registry differently than in the previous module):
+> **Warning:** This works correctly with the Redis online store because it conditionally writes. This logic has not been implemented for other online stores yet, and so can result in incorrect behavior
 
-```yaml
-project: feast_demo_local
-provider: local
-registry:
-  path: data/local_registry.db
-  cache_ttl_seconds: 5
-online_store:
-  type: redis
-  connection_string: localhost:6379
-offline_store:
-  type: file
+```bash
+export AIRFLOW_HOME=$(pwd)/airflow_home
+airflow dags backfill \
+    --start-date 2019-11-21 \
+    --end-date 2019-11-25 \
+    materialize_dag
 ```
 
-The `registry` config maps to constructor arguments for `RegistryConfig` Pydantic model([reference](https://rtd.feast.dev/en/master/index.html#feast.repo_config.RegistryConfig)).
-- In the `feature_store.yaml` above, note that there is a `cache_ttl_seconds` of 5. This ensures that every five seconds, the feature server and push server will expire its registry cache. On the following request, it will refresh its registry by pulling from the registry path.
-- Feast adds a convenience wrapper so if you specify just `registry: [path]`, Feast will map that to `RegistryConfig(path=[your path])`.
 
 # Conclusion
 By the end of this module, you will have learned how to build streaming features power real time models with Feast. Feast abstracts away the need to think about data modeling in the online store and helps you:
