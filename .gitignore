@@ -7,3 +7,4 @@ terraform.tfstate.backup
 .terraform*
 *.iml
 **/feast-postgres-data/*
+**/airflow_demo/airflow_home/*

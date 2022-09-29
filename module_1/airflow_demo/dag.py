@@ -1,16 +1,21 @@
+import os
 from airflow.decorators import dag, task
 from datetime import datetime
-from feast import RepoConfig, RegistryConfig, FeatureStore, RedisOnlineStoreConfig
+from feast import RepoConfig, FeatureStore
+from feast.repo_config import RegistryConfig
+from feast.infra.online_stores.redis import RedisOnlineStoreConfig
+import pendulum
 
 
 @dag(
     schedule="@daily",
     catchup=False,
+    start_date=pendulum.datetime(2021, 1, 1, tz="UTC"),
     tags=["feast"],
 )
 def materialize_dag():
     @task()
-    def materialize():
+    def materialize(data_interval_start=None, data_interval_end=None):
         repo_config = RepoConfig(
             registry=RegistryConfig(
                 registry_type="sql",
@@ -20,11 +25,15 @@ def materialize_dag():
             provider="local",
             offline_store="file",
             online_store=RedisOnlineStoreConfig(connection_string="localhost:6379"),
+            entity_key_serialization_version=2,
         )
+        # Needed for Mac OS users because of a seg fault in requests for standalone Airflow (not needed in prod)
+        os.environ["NO_PROXY"] = "*"
         store = FeatureStore(config=repo_config)
-        store.materialize_incremental(datetime.now())
+        # Add 1 hr overlap to account for late data
+        store.materialize(data_interval_start.subtract(hours=1), data_interval_end)
 
     materialize()
 
 
-materialize_dag()
+materialization_dag = materialize_dag()
