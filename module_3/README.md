@@ -113,38 +113,38 @@ With dbt incremental models, the model itself in incremental mode selects overla
 
 ```python
 dbt_test = BashOperator(
-  task_id="dbt test",
-  bash_command=f"""
-            dbt test --models "aggregate_transaction_features"
-            """,
-  dag=dag,
+    task_id="dbt_test",
+    bash_command="""
+        cd ${AIRFLOW_HOME}; dbt test --models "aggregate_transaction_features"
+        """,
+    dag=dag,
 )
 
 dbt_run = BashOperator(
-  task_id="dbt run",
-  bash_command=f"""
-            dbt run --models "aggregate_transaction_features"
-            """,
-  dag=dag,
+    task_id="dbt_run",
+    bash_command="""
+        cd ${AIRFLOW_HOME}; dbt run --models "aggregate_transaction_features"
+        """,
+    dag=dag,
 )
 
 @task()
 def materialize(data_interval_start=None, data_interval_end=None):
-  repo_config = RepoConfig(
-    registry=RegistryConfig(
-      registry_type="sql",
-      path="postgresql://postgres:mysecretpassword@127.0.0.1:55001/feast",
+    repo_config = RepoConfig(
+        registry=RegistryConfig(
+        registry_type="sql",
+        path="postgresql://postgres:mysecretpassword@127.0.0.1:55001/feast",
     ),
     project="feast_demo_local",
     provider="local",
     offline_store=SnowflakeOfflineStoreConfig(
-      account=os.getenv("SNOWFLAKE_DEPLOYMENT_URL"),
-      user=os.getenv("SNOWFLAKE_USER"),
-      password=os.getenv("SNOWFLAKE_PASSWORD"),
-      role=os.getenv("SNOWFLAKE_ROLE"),
-      warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
-      database=os.getenv("SNOWFLAKE_DATABASE"),
-      schema_=os.getenv("SNOWFLAKE_SCHEMA")
+        account=os.getenv("SNOWFLAKE_DEPLOYMENT_URL"),
+        user=os.getenv("SNOWFLAKE_USER"),
+        password=os.getenv("SNOWFLAKE_PASSWORD"),
+        role=os.getenv("SNOWFLAKE_ROLE"),
+        warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
+        database=os.getenv("SNOWFLAKE_DATABASE"),
+        schema_=os.getenv("SNOWFLAKE_SCHEMA")
     ),
     online_store=RedisOnlineStoreConfig(connection_string="localhost:6379"),
     entity_key_serialization_version=2
