@@ -1,0 +1,11 @@
+
+version: 2
+
+models:
+  - name: aggregate_transaction_features
+    description: ""
+    columns:
+      - name: "USER_ID"
+        description: "The primary key for this table"
+        tests:
+          - not_null

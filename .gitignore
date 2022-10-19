@@ -8,3 +8,4 @@ terraform.tfstate.backup
 *.iml
 **/feast-postgres-data/*
 **/airflow_demo/airflow_home/*
+.vscode/*
