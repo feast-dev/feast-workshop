@@ -20,7 +20,7 @@ This is a very similar module to module 1. The key difference is now we'll be us
 
 - [Workshop](#workshop)
   - [Step 1: Install Feast](#step-1-install-feast)
-  - [Step 2: Inspect the `feature_store.yaml`](#step-2-inspect-the-feature_storeyaml)
+  - [Step 2: Inspect the `feature_store.yaml`and run `feast apply`](#step-2-inspect-the-feature_storeyamland-run-feast-apply)
   - [Step 4: Spin up services](#step-4-spin-up-services)
     - [Step 4a: Redis + Feast SQL Registry + Feast services](#step-4a-redis--feast-sql-registry--feast-services)
     - [Step 4b: Set up dbt](#step-4b-set-up-dbt)
@@ -45,7 +45,7 @@ First, we install Feast with Spark and Postgres and Redis support:
 pip install "feast[snowflake,postgres,redis]"
 ```
 
-## Step 2: Inspect the `feature_store.yaml`
+## Step 2: Inspect the `feature_store.yaml`and run `feast apply`
 
 ```yaml
 project: feast_demo_local
@@ -69,6 +69,11 @@ entity_key_serialization_version: 2
 ```
 
 Now we're using a test database in Snowflake. 
+
+To get started, go ahead and register the feature repository
+```bash
+cd feature_repo; feast apply
+```
 
 ## Step 4: Spin up services
 
