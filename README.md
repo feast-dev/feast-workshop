@@ -9,7 +9,7 @@ We explain concepts & best practices by example, and also showcase how to addres
 ### What is Feast?
 Feast is an operational system for managing and serving machine learning features to models in production. It can serve features from a low-latency online store (for real-time prediction) or from an offline store (for  batch scoring). 
 
-<img src="images/hero.png" width=600>
+<img src="images/feast-marchitecture.png" width=750>
 
 ### What is Feast not?
 - Feast does not orchestrate data pipelines (e.g. batch / stream transformation or materialization jobs), but provides a framework to integrate with adjacent tools like dbt, Airflow, and Spark.
@@ -53,7 +53,7 @@ Since we'll be learning how to leverage Feast in CI/CD, you'll also need to fork
 These are meant mostly to be done in order, with examples building on previous concepts.
 
 | Time (min) | Description                                                                      | Module&nbsp;&nbsp;&nbsp;       |
-|:----------:|:---------------------------------------------------------------------------------|:-------------------------------|
+| :--------: | :------------------------------------------------------------------------------- | :----------------------------- |
 |   30-45    | Setting up Feast projects & CI/CD + powering batch predictions                   | [Module 0](module_0/README.md) |
 |   15-20    | Streaming ingestion & online feature retrieval with Kafka, Spark, Airflow, Redis | [Module 1](module_1/README.md) |
 |   10-15    | Real-time feature engineering with on demand transformations                     | [Module 2](module_2/README.md) |
