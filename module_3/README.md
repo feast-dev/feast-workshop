@@ -197,14 +197,17 @@ airflow dags backfill \
 ```
 
 ## Step 5: Streaming
-It is on you to build out a separate streaming pipeline (e.g. usign Spark Structured Streaming or Flink), ensuring the transformation logic is consistent with batch transformations, and calling the push API as per module 1. 
+There are two broad approaches with streaming
+1. **[Simple, semi-fresh features]** Use data warehouse / data lake specific streaming ingest of raw data.
+   - This means that Feast only needs to know about a "batch feature" because the assumption is those batch features are sufficiently fresh.
+   - **BUT** there are limits to how fresh your features are. You won't be able to get to minute level freshness.
+2. **[Complex, very fresh features]** Build separate streaming pipelines for very fresh features
+   - It is on you to build out a separate streaming pipeline (e.g. usign Spark Structured Streaming or Flink), ensuring the transformation logic is consistent with batch transformations, and calling the push API as per module 1. 
 
 Feast will help enforce a consistent schema across batch + streaming features as they land in the online store. 
 
-- TODO(danny): re-add streaming
-
 # Conclusion
-By the end of this module, you will have learned how to build a full feature platform, with orchestrated batch transformations (using dbt + Airflow), orchestrated materialization (with Feast + Airflow), and streaming ingestion (with Spark + Feast).
+By the end of this module, you will have learned how to build a full feature platform, with orchestrated batch transformations (using dbt + Airflow), orchestrated materialization (with Feast + Airflow).
 
 ## Limitations
 - Feast does not itself handle orchestration of transformation or materialization, and relies on the user to configure this with tools like dbt and Airflow. 
