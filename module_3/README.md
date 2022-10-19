@@ -34,6 +34,7 @@ This is a very similar module to module 1. The key difference is now we'll be us
   - [Limitations](#limitations)
   - [Why Feast?](#why-feast)
 - [FAQ](#faq)
+    - [How do I iterate on features?](#how-do-i-iterate-on-features)
     - [How does this work in production?](#how-does-this-work-in-production)
 
 # Workshop
@@ -221,6 +222,14 @@ Feast abstracts away the need to think about data modeling in the online store a
 - serve features (e.g. through `feature_store.get_online_features` or through feature servers)
 
 # FAQ
+
+### How do I iterate on features?
+Once a feature view is in production, best practice is to create a new feature view (+ a separate dbt model) to generate new features or change existing features, so-as not to negatively impact prediction quality.
+
+This means for each new set of features, you'll need to:
+1. Define a new dbt model
+2. Define a new Feast data source + feature view, and feature service (model version) that depends on these features.
+3. Ensure the transformations + materialization jobs are executed at the right cadence with Airflow + dbt + Feast.
 
 ### How does this work in production?
 Several things change:
