@@ -47,12 +47,8 @@ Since we'll be learning how to leverage Feast in CI/CD, you'll also need to fork
 These are meant mostly to be done in order, with examples building on previous concepts.
 
 | Time (min) | Description                                                                      | Module&nbsp;&nbsp;&nbsp;       |
-| :--------: | :------------------------------------------------------------------------------- | :----------------------------- |
+|:----------:|:---------------------------------------------------------------------------------|:-------------------------------|
 |   30-45    | Setting up Feast projects & CI/CD + powering batch predictions                   | [Module 0](module_0/README.md) |
 |   15-20    | Streaming ingestion & online feature retrieval with Kafka, Spark, Airflow, Redis | [Module 1](module_1/README.md) |
 |   10-15    | Real-time feature engineering with on demand transformations                     | [Module 2](module_2/README.md) |
-|    TBD     | Feature server deployment (embed, as a service, AWS Lambda)                      | TBD                            |
-|    TBD     | Versioning features / models in Feast                                            | TBD                            |
-|    TBD     | Data quality monitoring in Feast                                                 | TBD                            |
-|    TBD     | Batch transformations                                                            | TBD                            |
-|    TBD     | Stream transformations                                                           | TBD                            |
+|     30     | (WIP) Orchestrated batch transformations using dbt + Airflow with Feast          | [Module 3](module_3/README.md) |

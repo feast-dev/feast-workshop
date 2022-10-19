@@ -200,13 +200,11 @@ Feast abstracts away the need to think about data modeling in the online store a
 
 # FAQ
 
-### How do you synchronize materialized features with pushed features from streaming?
-This relies on individual online store implementations. The existing Redis online store implementation for example will check timestamps of incoming events and prefer the latest version.
-
-Doing this event timestamp checking is expensive though and slows down writes. In many cases, this is not preferred. Databases often support storing multiple versions of the same value, so you can leverage that (+ TTLs) to query the most recent version at read time.
-
-### Does Feast allow pushing features to the offline store?
-Yes! See more details at https://docs.feast.dev/reference/data-sources/push#pushing-data
-
-### Can feature / push servers refresh their registry in response to an event? e.g. after a PR merges and `feast apply` is run?
-Unfortunately, currently the servers don't support this. Feel free to contribute a PR though to enable this! The tricky part here is that Feast would need to keep track of these servers in the registry (or in some other way), which is not the way Feast is currently designed.
+### How does this work in production?
+Several things change:
+- All credentials are secured as secrets
+- dbt models are version controlled
+- Production deployment of Airflow (e.g. syncing with a Git repository of DAGs, using k8s)
+- Bundling dbt models with Airflow (e.g. via S3 like this [MWAA + dbt guide](https://docs.aws.amazon.com/mwaa/latest/userguide/samples-dbt.html))
+- Airflow DAG parallelizes across feature views (instead of running a single `feature_store.materialize` across all feature views)
+- Feast materialization is configured to be more scalable (e.g. using other Feast batch materialization engines [Bytewax](https://docs.feast.dev/reference/batch-materialization/bytewax), [Snowflake](https://docs.feast.dev/reference/batch-materialization/snowflake), [Lambda](https://rtd.feast.dev/en/master/index.html?highlight=LambdaMaterializationEngine#feast.infra.materialization.aws_lambda.lambda_engine.LambdaMaterializationEngine), [Spark](https://github.com/feast-dev/feast/blob/master/sdk/python/feast/infra/materialization/contrib/spark/spark_materialization_engine.py))
