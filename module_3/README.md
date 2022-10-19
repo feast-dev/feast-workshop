@@ -6,6 +6,8 @@ This is a very similar module to module 1. The key difference is now we'll be us
 - **Online store**: Redis
 - **Use case**: Predicting churn for drivers in real time.
 
+<img src="architecture.png" width=750>
+
 <h2>Table of Contents</h2>
 
 - [Workshop](#workshop)
