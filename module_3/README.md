@@ -72,6 +72,13 @@ Now we're using a test database in Snowflake.
 
 To get started, go ahead and register the feature repository
 ```bash
+# Note: first you need to export environment variables matching the above variables:
+# export SNOWFLAKE_DEPLOYMENT_URL="[YOUR DEPLOYMENT]
+# export SNOWFLAKE_USER="[YOUR USER]
+# export SNOWFLAKE_PASSWORD="[YOUR PASSWORD]
+# export SNOWFLAKE_ROLE="[YOUR ROLE]
+# export SNOWFLAKE_WAREHOUSE="[YOUR WAREHOUSE]
+# export SNOWFLAKE_DATABASE="[YOUR DATABASE]
 cd feature_repo; feast apply
 ```
 
@@ -114,6 +121,13 @@ We setup a standalone version of Airflow to set up the `PythonOperator` (Airflow
 The below script will copy the dbt DAGs over. In production, you'd want to use Airflow to sync with version controlled dbt DAGS (e.g. that are sync'd to S3).
 
 ```bash
+# First: export Snowflake related environment variables used above:
+# export SNOWFLAKE_DEPLOYMENT_URL="[YOUR DEPLOYMENT]
+# export SNOWFLAKE_USER="[YOUR USER]
+# export SNOWFLAKE_PASSWORD="[YOUR PASSWORD]
+# export SNOWFLAKE_ROLE="[YOUR ROLE]
+# export SNOWFLAKE_WAREHOUSE="[YOUR WAREHOUSE]
+# export SNOWFLAKE_DATABASE="[YOUR DATABASE]
 cd airflow_demo; sh setup_airflow.sh
 ```
 
