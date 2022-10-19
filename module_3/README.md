@@ -24,7 +24,7 @@ This is a very similar module to module 1. The key difference is now we'll be us
   - [Step 4: Spin up services](#step-4-spin-up-services)
     - [Step 4a: Redis + Feast SQL Registry + Feast services](#step-4a-redis--feast-sql-registry--feast-services)
     - [Step 4b: Set up dbt](#step-4b-set-up-dbt)
-    - [Step 4c: Setting up Airflow](#step-4c-setting-up-airflow)
+    - [Step 4c: Setting up Airflow to work with dbt](#step-4c-setting-up-airflow-to-work-with-dbt)
     - [Step 4d: Examine the Airflow DAG](#step-4d-examine-the-airflow-dag)
       - [Q: What if different feature views have different freshness requirements?](#q-what-if-different-feature-views-have-different-freshness-requirements)
     - [Step 4e: Enable the Airflow DAG](#step-4e-enable-the-airflow-dag)
@@ -105,9 +105,11 @@ To initialize dbt with your own credentials, do this
 cd dbt/feast_demo; dbt init
 ```
 
-### Step 4c: Setting up Airflow
+### Step 4c: Setting up Airflow to work with dbt
 
 We setup a standalone version of Airflow to set up the `PythonOperator` (Airflow now prefers @task for this) and `BashOperator` which will run incremental dbt models. We use dbt to define batch transformations from Snowflake, and once the incremental model is tested / ran, we run materialization.
+
+The below script will copy the dbt DAGs over. In production, you'd want to use Airflow to sync with version controlled dbt DAGS (e.g. that are sync'd to S3).
 
 ```bash
 cd airflow_demo; sh setup_airflow.sh
