@@ -9,7 +9,7 @@ We explain concepts & best practices by example, and also showcase how to addres
 ### What is Feast?
 Feast is an operational system for managing and serving machine learning features to models in production. It can serve features from a low-latency online store (for real-time prediction) or from an offline store (for  batch scoring). 
 
-<img src="images/feast-marchitecture.png" width=750>
+<img src="images/feast_marchitecture.png" width=750>
 
 ### What is Feast not?
 - Feast does not orchestrate data pipelines (e.g. batch / stream transformation or materialization jobs), but provides a framework to integrate with adjacent tools like dbt, Airflow, and Spark.
