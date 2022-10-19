@@ -11,6 +11,12 @@ Feast is an operational system for managing and serving machine learning feature
 
 <img src="images/hero.png" width=600>
 
+### What is Feast not?
+- Feast does not orchestrate data pipelines (e.g. batch / stream transformation or materialization jobs), but provides a framework to integrate with adjacent tools like dbt, Airflow, and Spark.
+- Feast also does not solve other commonly faced issues like data quality, experiment management, etc. 
+
+See more details at [What Feast is not](https://docs.feast.dev/#what-feast-is-not).
+
 ### Why Feast?
 Feast solves several common challenges teams face:
 1. Lack of feature reuse across teams

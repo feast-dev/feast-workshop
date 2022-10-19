@@ -1,9 +1,17 @@
-<h1>Module 3: Scheduled batch transformations (Snowflake)</h1>
+<h1>Module 3: Orchestrated batch transformations using dbt + Airflow with Feast (Snowflake)</h1>
+
+> **Note:** This module is still WIP, and does not have a public data set to use
 
 This is a very similar module to module 1. The key difference is now we'll be using a data warehouse (Snowflake) in combination with dbt + Airflow to ensure that batch features are regularly generated. 
 
+**Caveats**
+- Feast does not itself handle orchestration of data pipelines (transforming features, materialization) and relies on the user to configure this with tools like dbt and Airflow.
+- Feast does not ensure consistency in transformation logic between batch and stream features
+
+**Architecture**
 - **Data sources**: Snowflake
 - **Online store**: Redis
+- **Orchestrator**: Airflow + dbt
 - **Use case**: Predicting churn for drivers in real time.
 
 <img src="architecture.png" width=750>
@@ -62,11 +70,10 @@ Now we're using a test database in Snowflake.
 
 ## Step 4: Spin up services
 
-### Step 4a: Kafka + Redis + Feast SQL Registry + Feast services
+### Step 4a: Redis + Feast SQL Registry + Feast services
 
 We use Docker Compose to spin up the services we need.
-- This is similar to the previous module, which feeds data from  `feature_repo/data/driver_stats.parquet`into a Kafka topic
-- This also deploys an instance of Redis, Postgres for a registry, a Feast feature server + push server.
+- This deploys an instance of Redis, Postgres for a registry, a Feast feature server + push server.
 
 Start up the Docker daemon and then use Docker Compose to spin up the services as described above:
 - You may need to run `sudo docker-compose up` if you run into a Docker permission denied error
@@ -187,11 +194,20 @@ airflow dags backfill \
 ```
 
 ## Step 5: Streaming
+It is on you to build out a separate streaming pipeline (e.g. usign Spark Structured Streaming or Flink), ensuring the transformation logic is consistent with batch transformations, and calling the push API as per module 1. 
+
+Feast will help enforce a consistent schema across batch + streaming features as they land in the online store. 
+
 - TODO(danny): re-add streaming
 
 # Conclusion
 By the end of this module, you will have learned how to build a full feature platform, with orchestrated batch transformations (using dbt + Airflow), orchestrated materialization (with Feast + Airflow), and streaming ingestion (with Spark + Feast).
 
+## Limitations
+- Feast does not itself handle orchestration of transformation or materialization, and relies on the user to configure this with tools like dbt and Airflow. 
+- Feast does not ensure consistency in transformation logic between batch and stream features
+
+## Why Feast?
 Feast abstracts away the need to think about data modeling in the online store and helps you:
 - maintain fresh features in the online store by
   - ingesting batch features into the online store (via `feast materialize` or `feast materialize-incremental`)
