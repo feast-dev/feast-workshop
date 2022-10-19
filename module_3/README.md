@@ -82,15 +82,11 @@ Start up the Docker daemon and then use Docker Compose to spin up the services a
 ```console
 $ docker-compose up
 
-Creating network "module_1_default" with the default driver
-Creating zookeeper ... done
+Creating network "module_3_default" with the default driver
 Creating redis     ... done
-Creating broker               ... done
 Creating feast_feature_server ... done
-Creating feast_push_server    ... done
-Creating kafka_events         ... done
 Creating registry             ... done
-Attaching to zookeeper, redis, broker, feast_push_server, feast_feature_server, kafka_events, registry
+Attaching to redis, feast_feature_server, registry
 ...
 ```
 
@@ -203,7 +199,7 @@ There are two broad approaches with streaming
    - This means that Feast only needs to know about a "batch feature" because the assumption is those batch features are sufficiently fresh.
    - **BUT** there are limits to how fresh your features are. You won't be able to get to minute level freshness.
 2. **[Complex, very fresh features]** Build separate streaming pipelines for very fresh features
-   - It is on you to build out a separate streaming pipeline (e.g. using Spark Structured Streaming or Flink), ensuring the transformation logic is consistent with batch transformations, and calling the push API as per module 1. 
+   - It is on you to build out a separate streaming pipeline (e.g. using Spark Structured Streaming or Flink), ensuring the transformation logic is consistent with batch transformations, and calling the push API as per [module 1](../module_1/README.md). 
 
 Feast will help enforce a consistent schema across batch + streaming features as they land in the online store. 
 
