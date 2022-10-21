@@ -1,5 +1,6 @@
 import os
 from airflow.decorators import task
+from airflow.models import Variable
 from airflow.models.dag import DAG
 from airflow.operators.bash import BashOperator
 from feast import RepoConfig, FeatureStore
@@ -9,9 +10,9 @@ from feast.infra.online_stores.redis import RedisOnlineStoreConfig
 import pendulum
 
 with DAG(
-    dag_id='feature_dag',
+    dag_id="feature_dag",
     start_date=pendulum.datetime(2021, 1, 1, tz="UTC"),
-    description='A dbt + Feast DAG',
+    description="A dbt + Feast DAG",
     schedule="@daily",
     catchup=False,
     tags=["feast"],
@@ -42,13 +43,13 @@ with DAG(
             project="feast_demo_local",
             provider="local",
             offline_store=SnowflakeOfflineStoreConfig(
-                account=os.getenv("SNOWFLAKE_DEPLOYMENT_URL"),
-                user=os.getenv("SNOWFLAKE_USER"),
-                password=os.getenv("SNOWFLAKE_PASSWORD"),
-                role=os.getenv("SNOWFLAKE_ROLE"),
-                warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
-                database=os.getenv("SNOWFLAKE_DATABASE"),
-                schema_=os.getenv("SNOWFLAKE_SCHEMA")
+                account=Variable.get("SNOWFLAKE_DEPLOYMENT_URL"),
+                user=Variable.get("SNOWFLAKE_USER"),
+                password=Variable.get("SNOWFLAKE_PASSWORD"),
+                role=Variable.get("SNOWFLAKE_ROLE"),
+                warehouse=Variable.get("SNOWFLAKE_WAREHOUSE"),
+                database=Variable.get("SNOWFLAKE_DATABASE"),
+                schema_=Variable.get("SNOWFLAKE_SCHEMA"),
             ),
             online_store=RedisOnlineStoreConfig(connection_string="localhost:6379"),
             entity_key_serialization_version=2,
@@ -62,4 +63,3 @@ with DAG(
         store.materialize(data_interval_start.subtract(hours=1), data_interval_end)
 
     dbt_test >> dbt_run >> materialize()
-

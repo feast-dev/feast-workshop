@@ -20,12 +20,14 @@ This is a very similar module to module 1. The key difference is now we'll be us
 
 - [Workshop](#workshop)
   - [Step 1: Install Feast](#step-1-install-feast)
-  - [Step 2: Inspect the `feature_store.yaml`and run `feast apply`](#step-2-inspect-the-feature_storeyamland-run-feast-apply)
-  - [Step 4: Spin up services](#step-4-spin-up-services)
-    - [Step 4a: Redis + Feast SQL Registry + Feast services](#step-4a-redis--feast-sql-registry--feast-services)
-    - [Step 4b: Set up dbt](#step-4b-set-up-dbt)
-    - [Step 4c: Setting up Airflow to work with dbt](#step-4c-setting-up-airflow-to-work-with-dbt)
-    - [Step 4d: Examine the Airflow DAG](#step-4d-examine-the-airflow-dag)
+  - [Step 2: Inspect the `feature_store.yaml`](#step-2-inspect-the-feature_storeyaml)
+  - [Step 3: Spin up services (Redis + Feast SQL Registry + Feast services)](#step-3-spin-up-services-redis--feast-sql-registry--feast-services)
+  - [Step 4: Set up dbt models for batch transformations](#step-4-set-up-dbt-models-for-batch-transformations)
+  - [Step 5: Run `feast apply`](#step-5-run-feast-apply)
+  - [Step 6: Set up orchestration](#step-6-set-up-orchestration)
+    - [Step 6a: Setting up Airflow to work with dbt](#step-6a-setting-up-airflow-to-work-with-dbt)
+    - [Step 6b: Examine the Airflow DAG](#step-6b-examine-the-airflow-dag)
+  - [Run `get_historical_features` and `get_online_features`](#run-get_historical_features-and-get_online_features)
       - [Q: What if different feature views have different freshness requirements?](#q-what-if-different-feature-views-have-different-freshness-requirements)
     - [Step 4e: Enable the Airflow DAG](#step-4e-enable-the-airflow-dag)
     - [Step 4f (optional): Run a backfill](#step-4f-optional-run-a-backfill)
@@ -45,7 +47,7 @@ First, we install Feast with Spark and Postgres and Redis support:
 pip install "feast[snowflake,postgres,redis]"
 ```
 
-## Step 2: Inspect the `feature_store.yaml`and run `feast apply`
+## Step 2: Inspect the `feature_store.yaml`
 
 ```yaml
 project: feast_demo_local
@@ -68,7 +70,40 @@ offline_store:
 entity_key_serialization_version: 2
 ```
 
-Now we're using a test database in Snowflake. 
+##  Step 3: Spin up services (Redis + Feast SQL Registry + Feast services)
+
+We use Docker Compose to spin up the services we need.
+- This deploys an instance of Redis, Postgres for a registry, a Feast feature server + push server.
+
+Start up the Docker daemon and then use Docker Compose to spin up the services as described above:
+- You may need to run `sudo docker-compose up` if you run into a Docker permission denied error
+```console
+$ docker-compose up
+
+Creating network "module_3_default" with the default driver
+Creating redis    ... done
+Creating registry ... done
+Creating feast_feature_server ... done
+Attaching to redis, registry, feast_feature_server
+...
+```
+
+## Step 4: Set up dbt models for batch transformations
+> **TODO(adchia):** Generate parquet file to upload for public Snowflake dataset for features
+ 
+There's already a dbt model that generates batch transformations. You just need to init this:
+
+> **Note:** You'll need to install dbt-snowflake as well! `brew tap dbt-labs/dbt` and `brew install dbt-snowflake`
+
+To initialize dbt with your own credentials, do this
+```bash
+cd dbt/feast_demo; dbt init; dbt run
+```
+
+This will create the initial tables we need for Feast
+
+## Step 5: Run `feast apply`
+In this example, we're using a test database in Snowflake. 
 
 To get started, go ahead and register the feature repository
 ```bash
@@ -81,57 +116,25 @@ To get started, go ahead and register the feature repository
 # export SNOWFLAKE_DATABASE="[YOUR DATABASE]
 cd feature_repo; feast apply
 ```
-
-## Step 4: Spin up services
-
-### Step 4a: Redis + Feast SQL Registry + Feast services
-
-We use Docker Compose to spin up the services we need.
-- This deploys an instance of Redis, Postgres for a registry, a Feast feature server + push server.
-
-Start up the Docker daemon and then use Docker Compose to spin up the services as described above:
-- You may need to run `sudo docker-compose up` if you run into a Docker permission denied error
-```console
-$ docker-compose up
-
-Creating network "module_3_default" with the default driver
-Creating redis     ... done
-Creating feast_feature_server ... done
-Creating registry             ... done
-Attaching to redis, feast_feature_server, registry
-...
-```
-
-### Step 4b: Set up dbt
-> **TODO(adchia):** Generate parquet file to upload for public Snowflake dataset for features
- 
-There's already a dbt model that generates batch transformations. You just need to init this:
-
-> **Note:** You'll need to install dbt-snowflake as well! `brew tap dbt-labs/dbt` and `brew install dbt-snowflake`
-
-To initialize dbt with your own credentials, do this
-```bash
-cd dbt/feast_demo; dbt init
-```
-
-### Step 4c: Setting up Airflow to work with dbt
+## Step 6: Set up orchestration
+### Step 6a: Setting up Airflow to work with dbt
 
 We setup a standalone version of Airflow to set up the `PythonOperator` (Airflow now prefers @task for this) and `BashOperator` which will run incremental dbt models. We use dbt to define batch transformations from Snowflake, and once the incremental model is tested / ran, we run materialization.
 
 The below script will copy the dbt DAGs over. In production, you'd want to use Airflow to sync with version controlled dbt DAGS (e.g. that are sync'd to S3).
 
 ```bash
-# First: export Snowflake related environment variables used above:
+# If not already done, export Snowflake related environment variables used above:
 # export SNOWFLAKE_DEPLOYMENT_URL="[YOUR DEPLOYMENT]
 # export SNOWFLAKE_USER="[YOUR USER]
 # export SNOWFLAKE_PASSWORD="[YOUR PASSWORD]
 # export SNOWFLAKE_ROLE="[YOUR ROLE]
 # export SNOWFLAKE_WAREHOUSE="[YOUR WAREHOUSE]
 # export SNOWFLAKE_DATABASE="[YOUR DATABASE]
-cd airflow_demo; sh setup_airflow.sh
+cd ../airflow_demo; sh setup_airflow.sh
 ```
 
-### Step 4d: Examine the Airflow DAG
+### Step 6b: Examine the Airflow DAG
 
 The example dag is going to run on a daily basis and materialize *all* feature views based on the start and end interval. Note that there is a 1 hr overlap in the start time to account for potential late arriving data in the offline store. 
 
@@ -189,6 +192,9 @@ with DAG(
     # Setup DAG
     dbt_test >> dbt_run >> materialize()
 ```
+
+## Run `get_historical_features` and `get_online_features`
+Run [Jupyter notebook](feature_repo/module_3.ipynb)
 
 #### Q: What if different feature views have different freshness requirements?
 
