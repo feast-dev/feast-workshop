@@ -27,11 +27,11 @@ This is a very similar module to module 1. The key difference is now we'll be us
   - [Step 6: Set up orchestration](#step-6-set-up-orchestration)
     - [Step 6a: Setting up Airflow to work with dbt](#step-6a-setting-up-airflow-to-work-with-dbt)
     - [Step 6b: Examine the Airflow DAG](#step-6b-examine-the-airflow-dag)
-  - [Run `get_historical_features` and `get_online_features`](#run-get_historical_features-and-get_online_features)
+    - [6c: Enable the DAG](#6c-enable-the-dag)
       - [Q: What if different feature views have different freshness requirements?](#q-what-if-different-feature-views-have-different-freshness-requirements)
-    - [Step 4e: Enable the Airflow DAG](#step-4e-enable-the-airflow-dag)
-    - [Step 4f (optional): Run a backfill](#step-4f-optional-run-a-backfill)
-  - [Step 5: Streaming](#step-5-streaming)
+    - [Step 6d (optional): Run a backfill](#step-6d-optional-run-a-backfill)
+  - [Step 7: Run `get_historical_features` and `get_online_features`](#step-7-run-get_historical_features-and-get_online_features)
+  - [Step 8: Streaming](#step-8-streaming)
 - [Conclusion](#conclusion)
   - [Limitations](#limitations)
   - [Why Feast?](#why-feast)
@@ -175,13 +175,13 @@ with DAG(
         project="feast_demo_local",
         provider="local",
         offline_store=SnowflakeOfflineStoreConfig(
-            account=os.getenv("SNOWFLAKE_DEPLOYMENT_URL"),
-            user=os.getenv("SNOWFLAKE_USER"),
-            password=os.getenv("SNOWFLAKE_PASSWORD"),
-            role=os.getenv("SNOWFLAKE_ROLE"),
-            warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
-            database=os.getenv("SNOWFLAKE_DATABASE"),
-            schema_=os.getenv("SNOWFLAKE_SCHEMA")
+            account=Variable.get("SNOWFLAKE_DEPLOYMENT_URL"),
+            user=Variable.get("SNOWFLAKE_USER"),
+            password=Variable.get("SNOWFLAKE_PASSWORD"),
+            role=Variable.get("SNOWFLAKE_ROLE"),
+            warehouse=Variable.get("SNOWFLAKE_WAREHOUSE"),
+            database=Variable.get("SNOWFLAKE_DATABASE"),
+            schema_=Variable.get("SNOWFLAKE_SCHEMA"),
         ),
         online_store=RedisOnlineStoreConfig(connection_string="localhost:6379"),
         entity_key_serialization_version=2
@@ -193,8 +193,10 @@ with DAG(
     dbt_test >> dbt_run >> materialize()
 ```
 
-## Run `get_historical_features` and `get_online_features`
-Run [Jupyter notebook](feature_repo/module_3.ipynb)
+### 6c: Enable the DAG
+Now go to `localhost:8080`, use Airflow's auto-generated admin password to login, and toggle on the DAG. It should run one task automatically. After waiting for a run to finish, you'll see a successful job:
+
+![](airflow.png)
 
 #### Q: What if different feature views have different freshness requirements?
 
@@ -202,10 +204,7 @@ There's no built in mechanism for this, but you could store this logic in the fe
  
 Then, you can parse these feature view in your Airflow job. You could for example have one DAG that runs all the daily `batch_schedule` feature views, and another DAG that runs all feature views with an hourly `batch_schedule`.
 
-### Step 4e: Enable the Airflow DAG
-Now go to `localhost:8080`, use Airflow's auto-generated admin password to login, and toggle on the `materialize_dag`. It should run one task automatically.
-
-### Step 4f (optional): Run a backfill
+### Step 6d (optional): Run a backfill
 To run a backfill (i.e. process previous days of the above while letting Airflow manage state), you can do (from the `airflow_demo` directory):
 
 > **Warning:** This works correctly with the Redis online store because it conditionally writes. This logic has not been implemented for other online stores yet, and so can result in incorrect behavior
@@ -218,7 +217,10 @@ airflow dags backfill \
     feature_dag
 ```
 
-## Step 5: Streaming
+## Step 7: Run `get_historical_features` and `get_online_features`
+Run [Jupyter notebook](feature_repo/module_3.ipynb)
+
+## Step 8: Streaming
 There are two broad approaches with streaming
 1. **[Simple, semi-fresh features]** Use data warehouse / data lake specific streaming ingest of raw data.
    - This means that Feast only needs to know about a "batch feature" because the assumption is those batch features are sufficiently fresh.
