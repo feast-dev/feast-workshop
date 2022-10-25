@@ -34,7 +34,7 @@ aggregate_transactions_view = FeatureView(
         Field(name="7D_AVG_AMT", dtype=Float32),
     ],
     online=True,
-    source=aggregate_transactions_source,
+    source=aggregate_transactions_push,
     tags={"production": "True"},
     owner="test2@gmail.com",
 )

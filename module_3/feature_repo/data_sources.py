@@ -11,13 +11,17 @@ transactions_source = SnowflakeSource(
     timestamp_field="TIMESTAMP",
 )
 
-aggregate_transactions_source = SnowflakeSource(
-    name="transactions_7d_source",
+aggregate_transactions_batch = SnowflakeSource(
+    name="transactions_7d_batch",
     database=yaml.safe_load(open("feature_store.yaml"))["offline_store"]["database"],
     table="AGGREGATE_TRANSACTION_FEATURES",
     schema="FRAUD",
     timestamp_field="TIMESTAMP",
     tags={"dbtModel": "models/example/aggregate_transaction_features.sql"},
+)
+
+aggregate_transactions_push = PushSource(
+    name="transactions_7d", batch_source=aggregate_transactions_batch
 )
 
 credit_scores = SnowflakeSource(
@@ -26,10 +30,4 @@ credit_scores = SnowflakeSource(
     query="SELECT USER_ID, DATE, CREDIT_SCORE, TIMESTAMP FROM CREDIT_SCORES",
     schema="FRAUD",
     timestamp_field="TIMESTAMP",
-)
-
-# A push source is useful if you have upstream systems that transform features (e.g. stream processing jobs)
-driver_stats_push_source = PushSource(
-    name="driver_stats_push_source",
-    batch_source=transactions_source,
 )

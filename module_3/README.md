@@ -1,6 +1,6 @@
 <h1>Module 3: Orchestrated batch transformations using dbt + Airflow with Feast (Snowflake)</h1>
 
-> **Note:** This module is still WIP, and does not have a public data set to use
+> **Note:** This module is still WIP, and does not have a public data set to use. There is a smaller dataset visible in `data/`
 
 This is a very similar module to module 1. The key difference is now we'll be using a data warehouse (Snowflake) in combination with dbt + Airflow to ensure that batch features are regularly generated. 
 
@@ -21,7 +21,7 @@ This is a very similar module to module 1. The key difference is now we'll be us
 - [Workshop](#workshop)
   - [Step 1: Install Feast](#step-1-install-feast)
   - [Step 2: Inspect the `feature_store.yaml`](#step-2-inspect-the-feature_storeyaml)
-  - [Step 3: Spin up services (Redis + Feast SQL Registry + Feast services)](#step-3-spin-up-services-redis--feast-sql-registry--feast-services)
+  - [Step 3: Spin up services (Kafka + Redis + Feast SQL Registry + Feast services)](#step-3-spin-up-services-kafka--redis--feast-sql-registry--feast-services)
   - [Step 4: Set up dbt models for batch transformations](#step-4-set-up-dbt-models-for-batch-transformations)
   - [Step 5: Run `feast apply`](#step-5-run-feast-apply)
   - [Step 6: Set up orchestration](#step-6-set-up-orchestration)
@@ -30,8 +30,9 @@ This is a very similar module to module 1. The key difference is now we'll be us
     - [6c: Enable the DAG](#6c-enable-the-dag)
       - [Q: What if different feature views have different freshness requirements?](#q-what-if-different-feature-views-have-different-freshness-requirements)
     - [Step 6d (optional): Run a backfill](#step-6d-optional-run-a-backfill)
-  - [Step 7: Run `get_historical_features` and `get_online_features`](#step-7-run-get_historical_features-and-get_online_features)
-  - [Step 8: Streaming](#step-8-streaming)
+  - [Step 7: Retrieve features + test stream ingestion](#step-7-retrieve-features--test-stream-ingestion)
+    - [Overview](#overview)
+    - [Time to run code!](#time-to-run-code)
 - [Conclusion](#conclusion)
   - [Limitations](#limitations)
   - [Why Feast?](#why-feast)
@@ -70,10 +71,11 @@ offline_store:
 entity_key_serialization_version: 2
 ```
 
-##  Step 3: Spin up services (Redis + Feast SQL Registry + Feast services)
+##  Step 3: Spin up services (Kafka + Redis + Feast SQL Registry + Feast services)
 
 We use Docker Compose to spin up the services we need.
 - This deploys an instance of Redis, Postgres for a registry, a Feast feature server + push server.
+- This also uses `transactions.parquet` to generate streaming feature values to ingest into the online store with dummy timestamps
 
 Start up the Docker daemon and then use Docker Compose to spin up the services as described above:
 - You may need to run `sudo docker-compose up` if you run into a Docker permission denied error
@@ -81,10 +83,13 @@ Start up the Docker daemon and then use Docker Compose to spin up the services a
 $ docker-compose up
 
 Creating network "module_3_default" with the default driver
-Creating redis    ... done
-Creating registry ... done
+Creating registry  ... done
+Creating zookeeper ... done
+Creating redis     ... done
+Creating broker    ... done
+Creating tx_kafka_events ... done
 Creating feast_feature_server ... done
-Attaching to redis, registry, feast_feature_server
+Attaching to zookeeper, redis, registry, broker, kafka_events, feast_feature_server
 ...
 ```
 
@@ -106,15 +111,28 @@ This will create the initial tables we need for Feast
 In this example, we're using a test database in Snowflake. 
 
 To get started, go ahead and register the feature repository
-```bash
-# Note: first you need to export environment variables matching the above variables:
-# export SNOWFLAKE_DEPLOYMENT_URL="[YOUR DEPLOYMENT]
-# export SNOWFLAKE_USER="[YOUR USER]
-# export SNOWFLAKE_PASSWORD="[YOUR PASSWORD]
-# export SNOWFLAKE_ROLE="[YOUR ROLE]
-# export SNOWFLAKE_WAREHOUSE="[YOUR WAREHOUSE]
-# export SNOWFLAKE_DATABASE="[YOUR DATABASE]
-cd feature_repo; feast apply
+```console
+<!-- 
+Note: first you need to export environment variables 
+matching the above variables:
+
+export SNOWFLAKE_DEPLOYMENT_URL="[YOUR DEPLOYMENT]
+export SNOWFLAKE_USER="[YOUR USER]
+export SNOWFLAKE_PASSWORD="[YOUR PASSWORD]
+export SNOWFLAKE_ROLE="[YOUR ROLE]
+export SNOWFLAKE_WAREHOUSE="[YOUR WAREHOUSE]
+export SNOWFLAKE_DATABASE="[YOUR DATABASE]
+-->
+$ cd feature_repo; feast apply
+
+Created entity user
+Created feature view aggregate_transactions_features
+Created feature view credit_scores_features
+Created feature service model_v1
+Created feature service model_v2
+
+Deploying infrastructure for aggregate_transactions_features
+Deploying infrastructure for credit_scores_features
 ```
 ## Step 6: Set up orchestration
 ### Step 6a: Setting up Airflow to work with dbt
@@ -217,11 +235,11 @@ airflow dags backfill \
     feature_dag
 ```
 
-## Step 7: Run `get_historical_features` and `get_online_features`
-Run [Jupyter notebook](feature_repo/module_3.ipynb)
+## Step 7: Retrieve features + test stream ingestion
+### Overview
+Feast exposes a `get_historical_features` method to generate training data / run batch scoring and `get_online_features` method to power model serving.
 
-## Step 8: Streaming
-There are two broad approaches with streaming
+To achieve fresher features, one might consider using streaming compute.There are two broad approaches with streaming
 1. **[Simple, semi-fresh features]** Use data warehouse / data lake specific streaming ingest of raw data.
    - This means that Feast only needs to know about a "batch feature" because the assumption is those batch features are sufficiently fresh.
    - **BUT** there are limits to how fresh your features are. You won't be able to get to minute level freshness.
@@ -229,6 +247,9 @@ There are two broad approaches with streaming
    - It is on you to build out a separate streaming pipeline (e.g. using Spark Structured Streaming or Flink), ensuring the transformation logic is consistent with batch transformations, and calling the push API as per [module 1](../module_1/README.md). 
 
 Feast will help enforce a consistent schema across batch + streaming features as they land in the online store. 
+
+### Time to run code!
+Now, Run [Jupyter notebook](feature_repo/module_3.ipynb)
 
 # Conclusion
 By the end of this module, you will have learned how to build a full feature platform, with orchestrated batch transformations (using dbt + Airflow), orchestrated materialization (with Feast + Airflow).
