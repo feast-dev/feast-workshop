@@ -1,4 +1,4 @@
-<h1>Module 3: Orchestrated batch transformations using dbt + Airflow with Feast (Snowflake)</h1>
+<h1>Module 3: Orchestrated batch / stream transformations using dbt + Airflow with Feast (Snowflake)</h1>
 
 > **Note:** This module is still WIP, and does not have a public data set to use. There is a smaller dataset visible in `data/`
 
@@ -271,7 +271,7 @@ To outline a few approaches:
   - **Option 4** If you're using Flink, then consider configuring a [restart strategy](https://nightlies.apache.org/flink/flink-docs-release-1.15/docs/ops/state/task_failure_recovery/)
 
 # Conclusion
-By the end of this module, you will have learned how to build a full feature platform, with orchestrated batch transformations (using dbt + Airflow), orchestrated materialization (with Feast + Airflow).
+By the end of this module, you will have learned how to build a full feature platform, with orchestrated batch transformations (using dbt + Airflow), orchestrated materialization (with Feast + Airflow), and pointers on orchestrating streaming transformations.
 
 ## Limitations
 - Feast does not itself handle orchestration of transformation or materialization, and relies on the user to configure this with tools like dbt and Airflow. 
