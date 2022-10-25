@@ -33,6 +33,7 @@ This is a very similar module to module 1. The key difference is now we'll be us
   - [Step 7: Retrieve features + test stream ingestion](#step-7-retrieve-features--test-stream-ingestion)
     - [Overview](#overview)
     - [Time to run code!](#time-to-run-code)
+  - [Step 8: Options for orchestrating streaming pipelines](#step-8-options-for-orchestrating-streaming-pipelines)
 - [Conclusion](#conclusion)
   - [Limitations](#limitations)
   - [Why Feast?](#why-feast)
@@ -250,6 +251,24 @@ Feast will help enforce a consistent schema across batch + streaming features as
 
 ### Time to run code!
 Now, Run [Jupyter notebook](feature_repo/module_3.ipynb)
+
+## Step 8: Options for orchestrating streaming pipelines
+We don't showcase how this works, but broadly there are many approaches to this. In all the approaches, you'll likely want to generate operational metrics for monitoring (e.g. via StatsD or Prometheus Pushgateway).
+
+To outline a few approaches:
+  - **Option 1**: frequently run stream ingestion on a trigger, and then run this in the orchestration tool of choice like Airflow, Databricks Jobs, etc. e.g. 
+    ```python
+    (seven_day_avg
+        .writeStream
+        .outputMode("append") 
+        .option("checkpointLocation", "/tmp/feast-workshop/q3/")
+        .trigger(once=True)
+        .foreachBatch(send_to_feast)
+        .start())
+    ```
+  - **Option 2**: with Databricks, use Databricks Jobs to monitor streaming queries and auto-retry on a new cluster + on failure. See [Databricks docs](https://docs.databricks.com/structured-streaming/query-recovery.html#configure-structured-streaming-jobs-to-restart-streaming-queries-on-failure) for details.
+  - **Option 3**: with Dataproc, configure [restartable jobs](https://cloud.google.com/dataproc/docs/concepts/jobs/restartable-jobs)
+  - **Option 4** If you're using Flink, then consider configuring a [restart strategy](https://nightlies.apache.org/flink/flink-docs-release-1.15/docs/ops/state/task_failure_recovery/)
 
 # Conclusion
 By the end of this module, you will have learned how to build a full feature platform, with orchestrated batch transformations (using dbt + Airflow), orchestrated materialization (with Feast + Airflow).
