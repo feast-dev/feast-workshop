@@ -1,0 +1,17 @@
+project: feast_demo
+provider: aws
+registry: # where this repo's metadata is stored
+  registry_type: sql
+  path: postgresql://postgres:mysecretpassword@[your-rds-instance]:5432/feast
+online_store: # low latency online storage
+  type: dynamodb
+  region: us-west-1
+offline_store: 
+  type: spark
+  spark_conf: # Note: pip install -U "databricks-connect"
+      spark.ui.enabled: "false"
+      spark.eventLog.enabled: "false"
+      spark.sql.catalogImplementation: "hive"
+      spark.sql.parser.quotedRegexColumnNames: "true"
+      spark.sql.session.timeZone: "UTC"
+entity_key_serialization_version: 2

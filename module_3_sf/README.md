@@ -12,7 +12,7 @@ This is a very similar module to module 1. The key difference is now we'll be us
 - **Data sources**: Snowflake
 - **Online store**: Redis
 - **Orchestrator**: Airflow + dbt
-- **Use case**: Predicting churn for drivers in real time.
+- **Use case**: Fraud detection
 
 <img src="architecture.png" width=750>
 
@@ -44,7 +44,7 @@ This is a very similar module to module 1. The key difference is now we'll be us
 # Workshop
 ## Step 1: Install Feast
 
-First, we install Feast with Spark and Postgres and Redis support:
+First, we install Feast with Snowflake and Postgres and Redis support:
 ```bash
 pip install "feast[snowflake,postgres,redis]"
 ```

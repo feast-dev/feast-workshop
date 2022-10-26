@@ -9,3 +9,5 @@ terraform.tfstate.backup
 **/feast-postgres-data/*
 **/airflow_demo/airflow_home/*
 .vscode/*
+**/derby.log
+**/metastore_db/*
