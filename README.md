@@ -59,4 +59,4 @@ These are meant mostly to be done in order, with examples building on previous c
 |   10-15    | Real-time feature engineering with on demand transformations                     | [Module 2](module_2/README.md)                                                                         |
 |     30     | Orchestrated batch/stream transformations using dbt + Airflow with Feast         | [Module 3 (Snowflake)](module_3_sf/README.md)                                                          |
 |     30     | (WIP) Orchestrated batch/stream transformations using dbt + Airflow with Feast   | [Module 3 (Databricks)](module_3_db/README.md)                                                         |
-|     30     | Book recommender system with dbt + Airflow + Feast                               | [Workshop on Databricks](https://github.com/tecton-ai/book-recsys-apply-workshop/tree/main/feast_repo) |
+|     30     | Book recommender system with dbt + Airflow + Feast                               | [Feast x Book Recommendations (on Databricks)](https://github.com/tecton-ai/book-recsys-apply-workshop/tree/main/feast_repo) |
