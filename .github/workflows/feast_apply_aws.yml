@@ -25,7 +25,9 @@ jobs:
       # Upgrade pip
       - uses: actions/checkout@v2
       - name: Upgrade pip
-        run : pip install --upgrade pip
+        run: pip install --upgrade pip
+      - name: Upgrade setuptools
+        run: pip install --upgrade setuptools
 
       # Run `feast apply`
       - uses: actions/checkout@v2
