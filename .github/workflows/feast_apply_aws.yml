@@ -28,6 +28,8 @@ jobs:
         run: pip install --upgrade pip
       - name: Upgrade setuptools
         run: pip install --upgrade setuptools
+      - name: Install wheel
+        run: pip install wheel
 
       # Run `feast apply`
       - uses: actions/checkout@v2
