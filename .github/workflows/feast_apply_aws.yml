@@ -15,7 +15,7 @@ jobs:
         with:
           python-version: "3.7"
           architecture: x64
-      - name: Set up AWS SDK
+      - name: Set up AWS SDK w/ Secrets
         uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
