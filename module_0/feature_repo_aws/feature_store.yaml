@@ -1,6 +1,6 @@
 project: feast_demo_aws
 provider: aws
-registry: s3://feast-workshop-danny/registry.pb # TODO: Replace with your bucket
+registry: s3://feast-repo-gyerli/feast-workshop-module-0/registry.pb # TODO: Replace with your bucket
 online_store: null
 offline_store:
   type: file

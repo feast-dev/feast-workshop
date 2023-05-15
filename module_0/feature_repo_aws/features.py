@@ -12,7 +12,7 @@ from entities import *
 driver_hourly_stats_view = FeatureView(
     name="driver_hourly_stats",
     description="Hourly features",
-    entities=["driver"],
+    entities=[driver],
     ttl=timedelta(seconds=8640000000),
     schema=[
         Field(name="conv_rate", dtype=Float32),

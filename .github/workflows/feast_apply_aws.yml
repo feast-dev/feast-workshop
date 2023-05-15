@@ -13,19 +13,28 @@ jobs:
         id: setup-python
         uses: actions/setup-python@v2
         with:
-          python-version: "3.7"
+          python-version: "3.8"
           architecture: x64
-      - name: Set up AWS SDK
+      - name: Set up AWS SDK w/ Secrets
         uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-west-2
 
+      # Upgrade pip
+      - uses: actions/checkout@v2
+      - name: Upgrade pip
+        run: pip install --upgrade pip
+      - name: Upgrade setuptools
+        run: pip install --upgrade setuptools
+      - name: Install wheel
+        run: pip install wheel
+
       # Run `feast apply`
       - uses: actions/checkout@v2
       - name: Install feast
-        run: pip install "feast[aws]"
+        run: pip install --no-build-isolation --force-reinstall "feast[aws]"
       - name: Run feast apply
         env:
           FEAST_USAGE: "False"
