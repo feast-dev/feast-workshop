@@ -25,7 +25,7 @@ jobs:
       # Run `feast apply`
       - uses: actions/checkout@v2
       - name: Install feast
-        run: pip install "feast[aws]"
+        run: pip install --no-build-isolation --force-reinstall "feast[aws]""
       - name: Run feast apply
         env:
           FEAST_USAGE: "False"
