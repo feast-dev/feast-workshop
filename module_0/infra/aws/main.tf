@@ -7,6 +7,13 @@ resource "aws_s3_bucket" "feast_bucket" {
   force_destroy = true
 }
 
+resource "aws_s3_bucket_ownership_controls" "feast_bucket_acl" {
+  bucket = aws_s3_bucket.feast_bucket.bucket
+  rule {
+    object_ownership = "BucketOwnerPreferred"
+  }
+}
+
 resource "aws_s3_bucket_acl" "feast_bucket_acl" {
   bucket = aws_s3_bucket.feast_bucket.bucket
   acl    = "private"
