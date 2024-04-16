@@ -1,0 +1,14 @@
+version: '3.9'
+
+services:
+    web:
+        env_file:
+            - .env
+        build: .
+        command:
+            - /bin/bash
+            - -c
+            - python3 /code/run.py
+
+        volumes:
+            - .:/code

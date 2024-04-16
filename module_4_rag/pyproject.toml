@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "feast-rag"
+version = "0.1.0"
+description = "a demo using feast to do Retrieval Augmented Generation (RAG)"
+authors = ["franciscojavierarceo"]
+readme = "README.md"
+packages = [{include = "feast_rag"}]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+feast = "^0.35.0"
+torch = "^2.2.0"
+flasgger = "^0.9.7.1"
+wikipedia = "^1.4.0"
+lxml = "^5.1.0"
+sentence-transformers = "^2.3.1"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
