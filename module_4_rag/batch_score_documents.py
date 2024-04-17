@@ -4,8 +4,8 @@ from transformers import AutoTokenizer, AutoModel
 import torch
 import torch.nn.functional as F
 
-INPUT_FILENAME = "city_wikipedia_summaries.csv"
-EXPORT_FILENAME = "city_wikipedia_summaries_with_embeddings.csv"
+INPUT_FILENAME = "./data/city_wikipedia_summaries.csv"
+EXPORT_FILENAME = "./data/city_wikipedia_summaries_with_embeddings.parquet"
 TOKENIZER = 'sentence-transformers/all-MiniLM-L6-v2'
 MODEL = 'sentence-transformers/all-MiniLM-L6-v2'
 
@@ -35,8 +35,10 @@ def score_data() -> None:
         print('shape = ', df.shape)
         df['Embeddings'] = list(embeddings.detach().cpu().numpy())
         print("embeddings generated...")
+        df['event_timestamp'] = pd.to_datetime('today')
+        df["item_id"] = df.index
         print(df.head())
-        df.to_csv(EXPORT_FILENAME, index=False)
+        df.to_parquet(EXPORT_FILENAME, index=False)
         print("...data exported. job complete")
     else:
         print("scored data found...skipping generating embeddings.")
