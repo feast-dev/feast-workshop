@@ -3,7 +3,7 @@ from typing import Dict, List
 import wikipedia as wiki
 import pandas as pd
 
-EXPORT_FILENAME = "city_wikipedia_summaries.csv"
+EXPORT_FILENAME = "./data/city_wikipedia_summaries.csv"
 CITIES = [
     "New York, New York",
     "Los Angeles, California",
@@ -78,6 +78,7 @@ def pull_state_data() -> None:
         print("data not found pullling wikipedia state summaries...")
         city_summary_output = get_wikipedia_summary(CITIES)
         write_data(city_summary_output)
+        print(f"...data exported to {EXPORT_FILENAME}")
     else:
         print("data already present...skipping download")
 

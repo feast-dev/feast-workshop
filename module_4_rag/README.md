@@ -21,6 +21,16 @@ Then run
 ```bash
 python batch_score_documents.py
 ```
+Which will output data to `city_wikipedia_summaries_with_embeddings.parquet`
+
+## Feast
+
+To get started, make sure to have Feast installed and PostGreSQL.
+
+First run
+```bash
+feast apply
+```
 
 # Overview
 

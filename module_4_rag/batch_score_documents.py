@@ -1,4 +1,4 @@
-import os 
+import os
 import pandas as pd
 from transformers import AutoTokenizer, AutoModel
 import torch
