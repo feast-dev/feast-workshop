@@ -21,8 +21,10 @@ Then run
 ```bash
 python batch_score_documents.py
 ```
-Which will output data to `city_wikipedia_summaries_with_embeddings.parquet`
+Which will output data to `data/city_wikipedia_summaries_with_embeddings.parquet`
 
+Next we'll need to do some Feast work and move the data into a repo created by
+Feast.
 ## Feast
 
 To get started, make sure to have Feast installed and PostGreSQL.

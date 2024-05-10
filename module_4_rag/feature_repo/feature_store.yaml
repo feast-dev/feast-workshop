@@ -10,7 +10,7 @@ online_store:
   host: 127.0.0.1
   port: 5432
   database: feast
-  user: ""
+  user: "demo_user"
   password: ""
 
 

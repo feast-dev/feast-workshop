@@ -9,7 +9,7 @@ from feast.types import Float32, Array
 from entities import item
 
 
-parquet_file_path = "../data/city_wikipedia_summaries_with_embeddings.parquet"
+parquet_file_path = "./data/city_wikipedia_summaries_with_embeddings.parquet"
 
 source = FileSource(
     file_format=ParquetFormat(),
