@@ -50,33 +50,5 @@ flowchart TD;
     A[Pull Data] --> B[Batch Score Embeddings];
     B[Batch Score Embeddings] --> C[Materialize Online];
     C[Materialize Online] --> D[Retrieval Augmented Generation];
-    D[Retrieval Augmented Generation] --> E[Store User Interaction];
-    E[Store User Interaction] --> F[Update Training Labels];
-    F[Update Training Labels] --> H[Fine Tuning];
-    H[Fine Tuning] -. Backpropagate .-> B[Batch Score Embeddings];
 ```
-
-
-A simple example of the user experience:
-
-```
-Q: Can you tell me about Chicago?
-A: Here's some wikipedia facts about Chicago...
-```
-
-# Limitations
-A common issue with RAG and LLMs is hallucination. There are two common
-approaches:
-
-1. Prompt engineering
-- This approach is the most obvious but is susceptible to prompt injection
-
-2. Build a Classifier to return the "I don't know" response
-- This approach is less obvious, requires another model, more training data,
-and fine tuning
-
-We can, in fact, use both approaches to further attempt to minimize the
-likelihood of prompt injection.
-
-This demo will display both.
 
