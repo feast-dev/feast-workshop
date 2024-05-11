@@ -2,7 +2,8 @@ from datetime import timedelta
 
 from feast import (
     FeatureView,
-    Field, FileSource,
+    Field,
+    FileSource,
 )
 from feast.data_format import ParquetFormat
 from feast.types import Float32, Array

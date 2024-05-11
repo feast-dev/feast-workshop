@@ -3,7 +3,12 @@ from typing import Dict, List
 import wikipedia as wiki
 import pandas as pd
 
-EXPORT_FILENAME = "./data/city_wikipedia_summaries.csv"
+EXPORT_PATH = "./data"
+EXPORT_FILENAME = os.path.join(
+    EXPORT_PATH,
+    "city_wikipedia_summaries.csv",
+)
+
 CITIES = [
     "New York, New York",
     "Los Angeles, California",
@@ -54,8 +59,20 @@ CITIES = [
     "Tulsa, Oklahoma",
     "Arlington, Texas",
     "Tampa, Florida",
-    "New Orleans, Louisiana"
+    "New Orleans, Louisiana",
 ]
+
+
+def create_folder_if_not_exists(folder_path: str) -> None:
+    """Create a folder if it does not exist.
+
+    Args:
+    folder_path (str): The path to the folder to create.
+    """
+    if not os.path.exists(folder_path):
+        os.makedirs(folder_path)
+        print(f"Folder created: {folder_path}")
+
 
 def get_wikipedia_summary(cities: List[str]) -> Dict[str, str]:
     city_summaries = {}
@@ -70,17 +87,20 @@ def get_wikipedia_summary(cities: List[str]) -> Dict[str, str]:
 
 def write_data(output_dict: Dict[str, str]) -> None:
     df = pd.DataFrame([output_dict]).T.reset_index()
-    df.columns = ['State', 'Wiki Summary']
+    df.columns = ["State", "Wiki Summary"]
+    create_folder_if_not_exists(EXPORT_PATH)
     df.to_csv(EXPORT_FILENAME, index=False)
 
+
 def pull_state_data() -> None:
-    if EXPORT_FILENAME not in os.listdir():
+    if EXPORT_FILENAME not in os.listdir(EXPORT_PATH):
         print("data not found pullling wikipedia state summaries...")
         city_summary_output = get_wikipedia_summary(CITIES)
         write_data(city_summary_output)
         print(f"...data exported to {EXPORT_FILENAME}")
     else:
         print("data already present...skipping download")
+
 
 if __name__ == "__main__":
     pull_state_data()

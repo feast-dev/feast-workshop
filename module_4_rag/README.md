@@ -25,14 +25,20 @@ Which will output data to `data/city_wikipedia_summaries_with_embeddings.parquet
 
 Next we'll need to do some Feast work and move the data into a repo created by
 Feast.
+
 ## Feast
 
 To get started, make sure to have Feast installed and PostGreSQL.
 
 First run
 ```bash
-feast apply
+cp ./data feature_repo/
 ```
+
+And then open the `module_4.ipynb` notebook and follow those instructions.
+
+It will walk you through a trivial tutorial to retrieve the top `k` most similar
+documents using PGVector.
 
 # Overview
 
