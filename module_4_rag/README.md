@@ -82,11 +82,10 @@ features = store.retrieve_online_documents(
     top_k=3
 )
 ```
-And running `features_df` will show:
+And running `features_df.head()` will show:
 
 ```
-$features_df
-
+features_df.head()
         Embeddings	                                        distance
 0	[0.11749928444623947, -0.04684492573142052, 0....	0.935567
 1	[0.10329511761665344, -0.07897591590881348, 0....	0.939936
