@@ -52,3 +52,43 @@ flowchart TD;
     C[Materialize Online] --> D[Retrieval Augmented Generation];
 ```
 
+# Results
+
+The simple demo shows the code below with the retrieved data shown.
+
+```python
+import pandas as pd
+
+from feast import FeatureStore
+from batch_score_documents import run_model, TOKENIZER, MODEL
+from transformers import AutoTokenizer, AutoModel
+
+df = pd.read_parquet("./feature_repo/data/city_wikipedia_summaries_with_embeddings.parquet")
+
+store = FeatureStore(repo_path=".")
+
+# Prepare a query vector
+question = "the most populous city in the U.S. state of Texas?"
+
+tokenizer = AutoTokenizer.from_pretrained(TOKENIZER)
+model = AutoModel.from_pretrained(MODEL)
+query_embedding = run_model(question, tokenizer, model)
+query = query_embedding.detach().cpu().numpy().tolist()[0]
+
+# Retrieve top k documents
+features = store.retrieve_online_documents(
+    feature="city_embeddings:Embeddings",
+    query=query,
+    top_k=3
+)
+```
+And running `features_df` will show:
+
+```
+$features_df
+
+    Embeddings	                                        distance
+0	[0.11749928444623947, -0.04684492573142052, 0....	0.935567
+1	[0.10329511761665344, -0.07897591590881348, 0....	0.939936
+2	[0.11634305864572525, -0.10321836173534393, -0...	0.983343
+```
