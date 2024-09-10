@@ -1,0 +1,20 @@
+project: feast_demo_local
+provider: local
+registry:
+  registry_type: sql
+  path: postgresql://@localhost:5432/feast
+online_store:
+  type: postgres
+  pgvector_enabled: true
+  vector_len: 384
+  host: 127.0.0.1
+  port: 5432
+  database: feast
+  user: "demo_user"
+  password: ""
+
+
+offline_store:
+  type: file
+entity_key_serialization_version: 2
+
