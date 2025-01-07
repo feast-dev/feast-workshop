@@ -69,6 +69,9 @@ def score_data() -> None:
         print("...data exported. Job complete")
     else:
         print("Scored data found... skipping generating embeddings.")
+   
+    print("preview of data:")
+    print(df.head().T)
 
 
 if __name__ == "__main__":
