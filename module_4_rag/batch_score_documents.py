@@ -59,19 +59,39 @@ def score_data() -> None:
 
         tokenizer = AutoTokenizer.from_pretrained(TOKENIZER)
         model = AutoModel.from_pretrained(MODEL)
-        embeddings = run_model(df["Wiki Summary"].tolist(), tokenizer, model)
+        embeddings = run_model(df["Sentence Chunks"].tolist(), tokenizer, model)
         print("embeddings generated...")
+        df["id"] = [i for i in range(len(df))]
         df["Embeddings"] = list(embeddings.detach().cpu().numpy())
         df["event_timestamp"] = pd.to_datetime("today")
         df["item_id"] = df.index
+        df = _rename_df(df)
 
         df.to_parquet(EXPORT_FILENAME, index=False)
         print("...data exported. Job complete")
     else:
+        df = pd.read_parquet(EXPORT_FILENAME)
         print("Scored data found... skipping generating embeddings.")
-   
+
     print("preview of data:")
     print(df.head().T)
+
+
+def _rename_df(df: pd.DataFrame) -> pd.DataFrame:
+    df.columns = [c.replace(" ", "_").lower() for c in df.columns]
+    df.rename({"embeddings": "vector"}, axis=1, inplace=True)
+    df = df[
+        [
+            "id",
+            "item_id",
+            "event_timestamp",
+            "state",
+            "wiki_summary",
+            "sentence_chunks",
+            "vector",
+        ]
+    ]
+    return df
 
 
 if __name__ == "__main__":
