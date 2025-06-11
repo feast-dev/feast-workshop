@@ -15,3 +15,5 @@ offline_store:
       spark.sql.parser.quotedRegexColumnNames: "true"
       spark.sql.session.timeZone: "UTC"
 entity_key_serialization_version: 2
+batch_engine:
+

@@ -1,0 +1,24 @@
+[tool.poetry]
+name = "feast-compute-engine"
+version = "0.1.0"
+description = "A demo of using Feast compute engine"
+authors = ["Hao Xu"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+# change to use feast after release 0.50.0
+feast = {path = "../../feast", develop = true}
+pandas = "2.2.3"
+numpy = "1.26.4"
+setuptools = "^80.9.0"
+pyspark = "^4.0.0"
+jupyter = "^1.1.1"
+psycopg = "^3.2.9"
+psycopg-pool = "^3.2.6"
+cryptography = "^45.0.4"
+snowflake-connector-python = "^3.15.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
