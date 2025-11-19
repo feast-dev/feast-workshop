@@ -13,3 +13,5 @@ terraform.tfstate.backup
 **/metastore_db/*
 .env
 .idea
+.venv
+**/.ipynb_checkpoints
