@@ -11,13 +11,22 @@ from entities import *
 
 driver_hourly_stats_view = FeatureView(
     name="driver_hourly_stats",
-    description="Hourly features",
+    description="Hourly features from Danny",
     entities=["driver"],
     ttl=timedelta(seconds=8640000000),
-    schema=[
-        Field(name="conv_rate", dtype=Float32),
-        Field(name="acc_rate", dtype=Float32),
-    ],
+    schema=[Field(name="conv_rate", dtype=Float32),],
+    online=True,
+    source=driver_stats,
+    tags={"production": "True"},
+    owner="test@gmail.com",
+)
+
+driver_hourly_stats_view_2 = FeatureView(
+    name="driver_hourly_stats_2",
+    description="Hourly features from Danny",
+    entities=["driver"],
+    ttl=timedelta(seconds=8640000000),
+    schema=[Field(name="conv_rate", dtype=Float32),],
     online=True,
     source=driver_stats,
     tags={"production": "True"},
